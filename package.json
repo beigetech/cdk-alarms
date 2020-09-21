@@ -4,7 +4,6 @@
   "bin": {
     "alarms": "bin/alarms.js"
   },
-  "private": true,
   "publishConfig": {
     "@beigetech:alarms": "https://gitlab.com/api/v4/projects/greximus-beige/cdk-alarms/packages/npm/"
   },
