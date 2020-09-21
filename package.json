@@ -5,6 +5,8 @@
   "publishConfig": {
     "@greximus-beige:registry": "https://gitlab.com/api/v4/projects/21251762/packages/npm/"
   },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
