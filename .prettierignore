@@ -1,0 +1,8 @@
+coverage
+cdk.out
+README.md
+**/*.js
+**/*.d.ts
+.gitlab-ci.yml
+package.json
+package-lock.json

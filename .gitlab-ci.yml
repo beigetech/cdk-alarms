@@ -1,0 +1,27 @@
+stages:
+  - test
+  - deploy  
+ 
+test_infra:
+  image: node:12
+  stage: test 
+  script:
+  - npm install
+  - npm run build  
+  - npx prettier --check .  
+  - npm run test 
+
+release:
+  image: node:12
+  stage: deploy  
+  dependencies:
+    - test
+  script
+    - echo '@beigetech:alarms=https://gitlab.com/api/v4/packages/npm/'  >> .npmrc
+    - echo '//gitlab.com/api/v4/packages/npm/:_authToken=${CI_JOB_TOKEN}' >> .npmrc
+    - echo '//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}' >> .npmrc  
+    - npm publish  
+
+
+    
+

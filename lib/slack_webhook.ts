@@ -1,5 +1,5 @@
 export interface SlackWebhookProps {
-	channel: string;
-	url: string;
-	username: string;
+  channel: string;
+  url: string;
+  username: string;
 }
