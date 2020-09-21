@@ -1,3 +1,2 @@
-export * from './rds_alarm';
-export * from './rds_instance_types';
-
+export * from "./rds_alarm";
+export * from "./rds_instance_types";
