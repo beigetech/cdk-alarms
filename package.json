@@ -1,9 +1,7 @@
 {
   "name": "@greximus-beige/cdk-alarms",
   "version": "0.1.0",
-  "bin": {
-    "alarms": "bin/alarms.js"
-  },
+  "bin": {},
   "publishConfig": {
     "@greximus-beige:registry": "https://gitlab.com/api/v4/projects/21251762/packages/npm/"
   },
