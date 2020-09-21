@@ -1,5 +1,12 @@
 *.ts
 !*.d.ts
+package-lock.json
+README.md
+.prettierignore
+test/*
+tsconfig.json
+jest.config.js
+.gitlab-ci.yml
 
 # CDK asset staging directory
 .cdk.staging
