@@ -15,7 +15,7 @@ release:
   image: node:12
   stage: release  
   dependencies:
-    - test
+    - test_infra
   script:
     - echo '@beigetech:alarms=https://gitlab.com/api/v4/packages/npm/'  >> .npmrc
     - echo '//gitlab.com/api/v4/packages/npm/:_authToken=${CI_JOB_TOKEN}' >> .npmrc
