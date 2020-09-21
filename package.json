@@ -5,7 +5,7 @@
     "alarms": "bin/alarms.js"
   },
   "publishConfig": {
-    "@beigetech:alarms":"https://gitlab.com/api/v4/projects/greximus-beige/cdk-alarms/packages/npm/"
+    "@beigetech:alarms": "https://gitlab.com/api/v4/projects/greximus-beige/cdk-alarms/packages/npm/"
   },
   "scripts": {
     "build": "tsc",

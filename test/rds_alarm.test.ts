@@ -14,7 +14,6 @@ import {
   InstanceClass,
 } from "@aws-cdk/aws-ec2";
 import { DBAlarm } from "../lib/rds_alarm";
-import { INSTANCE_TYPES } from "../lib/rds_instance_types";
 
 test("Should generate default alarms for RDS Cluster", () => {
   let stack = new Stack();
