@@ -11,3 +11,4 @@ cdk.out
 .parcel-cache
 # dist
 dist
+coverage
