@@ -1,4 +1,29 @@
-# @beige/meerkat: Alarms for AWS Resources
+[![coverage report](https://gitlab.com/greximus-beige/cdk-alarms/badges/master/coverage.svg)](https://gitlab.com/greximus-beige/cdk-alarms/-/commits/master)
 
+## @beige/meerkat: Alarms for AWS Resources
 
+Create CloudWatch alarms and event notifications for AWS resources, supported constructs:
 
+ - DatabaseInstance
+ - DatabaseCluster
+
+Example:
+
+```
+Import {DatabaseAlarms} from '@greximus-beige/cdk-alarms';
+
+let stack = new Stack();
+
+let cluster = new DatabaseCluster(stack, "test-cluster", {
+    engine: DatabaseClusterEngine.AURORA_MYSQL,
+    masterUser: {
+      username: "admin",
+    },
+    instanceProps: {
+      vpc: new Vpc(stack, "test-vpc"),
+      instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
+    },
+});
+
+DatabaseAlarm.createClusterAlarms(stack, cluster);
+```
