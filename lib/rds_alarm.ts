@@ -335,19 +335,51 @@ export class DatabaseAlarm {
   /**
    * @param {Stack} - scope stack to create the resources in
    * @param {string} - id CDK identifier to form prefix
-   * @param {DatabaseCluster} - cluster an Aurora Database Cluster
-   * @param {SlackWebhookProps} slackWebHookProps - a Slack WebHook to write events to
+   * @param {DatabaseInstance | DatabaseCluster} - inst a Database Instance
+   * @param {SlackWebhookProps} - slackWebHookProps a Slack WebHook to write events to
    * @param {string[]} eventCategories - An array of RDS event categories of interest, these are detailed in the RDS documentation (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html#USER_Events.Messages)
    **/
-  static subcribeClusterEventsToSlack(
+  static subcribeEventsToSlack(
     scope: Stack,
     id: string,
-    cluster: DatabaseCluster,
+    inst: DatabaseInstance | DatabaseCluster,
     slackWebHookProps: SlackWebhookProps,
     eventCategories?: string[]
   ) {
-    let topic = new Topic(scope, id + "event-subscription-sns");
+    let topic = new Topic(scope, id + "EventSubscriptionSns");
 
+    let fn = new lambda.Function(scope, id + "EventProcessor", {
+      code: lambda.Code.fromAsset("functions/rds_event_to_slack"),
+      handler: "index.handler",
+      runtime: lambda.Runtime.NODEJS_12_X,
+      timeout: Duration.seconds(15),
+      memorySize: 128,
+      description: "Process RDS events for",
+      environment: {
+        SLACK_WEBHOOKURL: slackWebHookProps.url,
+        SLACK_CHANNELNAME: slackWebHookProps.channel,
+        SLACK_USERNAME: slackWebHookProps.username,
+      },
+    });
+
+    fn.addEventSource(new SnsEventSource(topic));
+
+    DatabaseAlarm.createEventSubscription(
+      scope,
+      id,
+      inst,
+      topic,
+      eventCategories
+    );
+  }
+
+  static createEventSubscription(
+    scope: Stack,
+    id: string,
+    inst: DatabaseInstance | DatabaseCluster,
+    topic: Topic,
+    eventCategories?: string[]
+  ) {
     let subscribeEventCategories = eventCategories
       ? eventCategories
       : [
@@ -363,25 +395,11 @@ export class DatabaseAlarm {
           "recovery",
         ];
 
-    let fn = new lambda.Function(scope, id + "event-processor", {
-      code: lambda.Code.fromAsset("resources/rds_event_to_slack"),
-      handler: "index.handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
-      timeout: Duration.seconds(15),
-      memorySize: 128,
-      description: "Process RDS events for " + cluster.clusterIdentifier,
-      environment: {
-        SLACK_WEBHOOKURL: slackWebHookProps.url,
-        SLACK_CHANNELNAME: slackWebHookProps.channel,
-        SLACK_USERNAME: slackWebHookProps.username,
-      },
-    });
-
-    fn.addEventSource(new SnsEventSource(topic));
-
-    new CfnEventSubscription(scope, id + "event-subscription", {
+    new CfnEventSubscription(scope, id + "EventSubscription", {
       snsTopicArn: topic.topicArn,
-      sourceIds: [cluster.clusterIdentifier],
+      sourceIds: [
+        Fn.ref(scope.getLogicalId(inst.node.defaultChild as CfnElement)),
+      ],
       eventCategories: subscribeEventCategories,
     });
   }

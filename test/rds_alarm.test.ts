@@ -191,7 +191,7 @@ test("Should generate event subscription for RDS Cluster", () => {
     },
   });
 
-  DatabaseAlarm.subcribeClusterEventsToSlack(stack, "rds-events", cluster, {
+  DatabaseAlarm.subcribeEventsToSlack(stack, "rds-events", cluster, {
     username: "Alarm Bot",
     url: "/slack/webhook",
     channel: "#alerts",
@@ -232,7 +232,7 @@ test("Should generate custom event subscription for RDS Cluster", () => {
     },
   });
 
-  DatabaseAlarm.subcribeClusterEventsToSlack(
+  DatabaseAlarm.subcribeEventsToSlack(
     stack,
     "rds-events",
     cluster,
@@ -249,6 +249,73 @@ test("Should generate custom event subscription for RDS Cluster", () => {
     SourceIds: [
       {
         Ref: stack.getLogicalId(cluster.node.defaultChild as CfnElement),
+      },
+    ],
+  });
+});
+
+test("Should generate custom event subscription for RDS Instance", () => {
+  let stack = new Stack();
+  let inst = new DatabaseInstance(stack, "test-instance", {
+    engine: DatabaseInstanceEngine.MYSQL,
+    vpc: new Vpc(stack, "test-vpc"),
+    masterUsername: "admin",
+    instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
+  });
+
+  DatabaseAlarm.subcribeEventsToSlack(
+    stack,
+    "rds-events",
+    inst,
+    {
+      username: "Alarm Bot",
+      url: "/slack/webhook",
+      channel: "#alerts",
+    },
+    ["availability"]
+  );
+
+  expect(stack).toHaveResourceLike("AWS::RDS::EventSubscription", {
+    EventCategories: ["availability"],
+    SourceIds: [
+      {
+        Ref: stack.getLogicalId(inst.node.defaultChild as CfnElement),
+      },
+    ],
+  });
+});
+
+test("Should generate default event subscription for RDS Instance", () => {
+  let stack = new Stack();
+  let inst = new DatabaseInstance(stack, "test-instance", {
+    engine: DatabaseInstanceEngine.MYSQL,
+    vpc: new Vpc(stack, "test-vpc"),
+    masterUsername: "admin",
+    instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
+  });
+
+  DatabaseAlarm.subcribeEventsToSlack(stack, "rds-events", inst, {
+    username: "Alarm Bot",
+    url: "/slack/webhook",
+    channel: "#alerts",
+  });
+
+  expect(stack).toHaveResourceLike("AWS::RDS::EventSubscription", {
+    EventCategories: [
+      "availability",
+      "backup",
+      "configuration change",
+      "creation",
+      "deletion",
+      "failover",
+      "failure",
+      "low storage",
+      "read replica",
+      "recovery",
+    ],
+    SourceIds: [
+      {
+        Ref: stack.getLogicalId(inst.node.defaultChild as CfnElement),
       },
     ],
   });
