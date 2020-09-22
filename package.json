@@ -1,5 +1,5 @@
 {
-  "name": "@greximus-beige/cdk-alarms",
+  "name": "@greximus-beige/alarms",
   "version": "0.1.0",
   "bin": {},
   "publishConfig": {

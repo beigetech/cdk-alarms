@@ -16,7 +16,20 @@ import {
   ComparisonOperator,
 } from "@aws-cdk/aws-cloudwatch";
 
-interface DBAlarmOptions {
+interface DatabaseAlarmOptions {
+  highCpuEnabled?: boolean;
+  highCpuPct?: number;
+  lowMemoryEnabled?: boolean;
+  lowMemoryBytes?: number;
+  readLatencyEnabled?: boolean;
+  readLatencySeconds?: number;
+  writeLatencyEnabled?: boolean;
+  writeLatencySeconds?: number;
+  deadLockEnabled?: boolean;
+  deadlockThreshold?: number;
+}
+
+interface DefaultDatabaseAlarmOptions extends DatabaseAlarmOptions {
   highCpuEnabled: boolean;
   highCpuPct: number;
   lowMemoryEnabled: boolean;
@@ -29,7 +42,7 @@ interface DBAlarmOptions {
   deadlockThreshold: number;
 }
 
-const DEFAULT_ALARM_OPTIONS: DBAlarmOptions = {
+const DEFAULT_ALARM_OPTIONS: DefaultDatabaseAlarmOptions = {
   writeLatencySeconds: 1,
   writeLatencyEnabled: true,
   readLatencySeconds: 1,
@@ -48,6 +61,19 @@ let getRef = (scope: Stack, inst: DatabaseInstance | DatabaseCluster): any => {
   };
 };
 
+/**
+ * Extend options with defaults
+ * @param {DatabaseAlarmOptions} a - The options to extend
+ * @param {DefaultDatabaseAlarmOptions} b - The options to use to extend a
+ **/
+let extend = (a: DatabaseAlarmOptions, b: DefaultDatabaseAlarmOptions) => {
+  Object.keys(b).forEach((k) => {
+    if (!Object.prototype.hasOwnProperty.call(a, k)) {
+      (a as any)[k] = (b as any)[k];
+    }
+  });
+};
+
 let getDimensions = (
   inst: DatabaseInstance | DatabaseCluster,
   ref: Record<string, string>
@@ -63,27 +89,28 @@ let getDimensions = (
   };
 };
 
-export class DBAlarm {
+export class DatabaseAlarm {
   /**
    * Create DatabaseCluster alarms, with sensible defaults, can override defaults
    * @param {Construct} scope
    * @param {string} id
    * @param {DatabaseCluster} inst - database cluster
-   * @param {DBAlarmOptions} options - override alarm configuration
+   * @param {DatabaseAlarmOptions} options - override alarm configuration
    * */
   public static createClusterAlarms(
     scope: Stack,
     inst: DatabaseCluster,
-    options?: DBAlarmOptions
+    options?: DatabaseAlarmOptions
   ) {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
+    extend(alarmOptions, DEFAULT_ALARM_OPTIONS);
 
     if (alarmOptions.highCpuEnabled) {
-      DBAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct);
+      DatabaseAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct);
     }
 
     if (alarmOptions.lowMemoryEnabled && alarmOptions.lowMemoryBytes) {
-      DBAlarm.createFreeableMemoryAlarm(
+      DatabaseAlarm.createFreeableMemoryAlarm(
         scope,
         inst,
         alarmOptions.lowMemoryBytes
@@ -91,7 +118,7 @@ export class DBAlarm {
     }
 
     if (alarmOptions.readLatencyEnabled) {
-      DBAlarm.createReadLatencyAlarm(
+      DatabaseAlarm.createReadLatencyAlarm(
         scope,
         inst,
         alarmOptions.readLatencySeconds
@@ -99,7 +126,7 @@ export class DBAlarm {
     }
 
     if (alarmOptions.writeLatencyEnabled) {
-      DBAlarm.createWriteLatencyAlarm(
+      DatabaseAlarm.createWriteLatencyAlarm(
         scope,
         inst,
         alarmOptions.writeLatencySeconds
@@ -107,23 +134,28 @@ export class DBAlarm {
     }
 
     if (alarmOptions.deadLockEnabled) {
-      DBAlarm.createDeadlockAlarm(scope, inst, alarmOptions.deadlockThreshold);
+      DatabaseAlarm.createDeadlockAlarm(
+        scope,
+        inst,
+        alarmOptions.deadlockThreshold
+      );
     }
   }
 
   public static createInstanceAlarms(
     scope: Stack,
     inst: DatabaseInstance,
-    options?: DBAlarmOptions
+    options?: DatabaseAlarmOptions
   ) {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
+    extend(alarmOptions, DEFAULT_ALARM_OPTIONS);
 
     if (alarmOptions.highCpuEnabled) {
-      DBAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct);
+      DatabaseAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct);
     }
 
     if (alarmOptions.lowMemoryEnabled && alarmOptions.lowMemoryBytes) {
-      DBAlarm.createFreeableMemoryAlarm(
+      DatabaseAlarm.createFreeableMemoryAlarm(
         scope,
         inst,
         alarmOptions.lowMemoryBytes
@@ -131,7 +163,7 @@ export class DBAlarm {
     }
 
     if (alarmOptions.writeLatencyEnabled) {
-      DBAlarm.createWriteLatencyAlarm(
+      DatabaseAlarm.createWriteLatencyAlarm(
         scope,
         inst,
         alarmOptions.writeLatencySeconds
@@ -139,7 +171,7 @@ export class DBAlarm {
     }
 
     if (alarmOptions.readLatencyEnabled) {
-      DBAlarm.createReadLatencyAlarm(
+      DatabaseAlarm.createReadLatencyAlarm(
         scope,
         inst,
         alarmOptions.readLatencySeconds
@@ -156,7 +188,7 @@ export class DBAlarm {
   static createCpuAlarm(
     scope: Stack,
     inst: DatabaseInstance | DatabaseCluster,
-    threshold: number
+    threshold?: number
   ) {
     let ref = getRef(scope, inst);
 
@@ -166,7 +198,7 @@ export class DBAlarm {
         metricName: "CPUUtilization",
         dimensions: getDimensions(inst, ref),
       }),
-      threshold: threshold,
+      threshold: threshold ? threshold : DEFAULT_ALARM_OPTIONS.highCpuPct,
       period: Duration.seconds(60),
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
       alarmDescription: Fn.join("", ["High CPU Utilization:", Fn.ref(ref.Ref)]),
@@ -183,7 +215,7 @@ export class DBAlarm {
   static createWriteLatencyAlarm(
     scope: Stack,
     inst: DatabaseCluster | DatabaseInstance,
-    threshold: number
+    threshold?: number
   ) {
     let ref = getRef(scope, inst);
 
@@ -193,7 +225,9 @@ export class DBAlarm {
         metricName: "WriteLatency",
         dimensions: getDimensions(inst, ref),
       }),
-      threshold: threshold,
+      threshold: threshold
+        ? threshold
+        : DEFAULT_ALARM_OPTIONS.writeLatencySeconds,
       period: Duration.seconds(60),
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
       alarmDescription: Fn.join("", [
@@ -213,7 +247,7 @@ export class DBAlarm {
   static createReadLatencyAlarm(
     scope: Stack,
     inst: DatabaseCluster | DatabaseInstance,
-    threshold: number
+    threshold?: number
   ) {
     let ref = getRef(scope, inst);
 
@@ -223,7 +257,9 @@ export class DBAlarm {
         metricName: "ReadLatency",
         dimensions: getDimensions(inst, ref),
       }),
-      threshold: threshold,
+      threshold: threshold
+        ? threshold
+        : DEFAULT_ALARM_OPTIONS.readLatencySeconds,
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
       period: Duration.seconds(60),
       alarmDescription: Fn.join("", [
@@ -243,7 +279,7 @@ export class DBAlarm {
   static createFreeableMemoryAlarm(
     scope: Stack,
     inst: DatabaseCluster | DatabaseInstance,
-    threshold: number
+    threshold?: number
   ) {
     let ref = getRef(scope, inst);
 
@@ -253,7 +289,7 @@ export class DBAlarm {
         metricName: "FreeableMemory",
         dimensions: getDimensions(inst, ref),
       }),
-      threshold: threshold,
+      threshold: threshold ? threshold : DEFAULT_ALARM_OPTIONS.lowMemoryBytes,
       period: Duration.seconds(60),
       comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
       alarmDescription: Fn.join("", [
@@ -273,7 +309,7 @@ export class DBAlarm {
   static createDeadlockAlarm(
     scope: Stack,
     inst: DatabaseCluster,
-    threshold: number
+    threshold?: number
   ) {
     let ref = getRef(scope, inst);
 
@@ -283,7 +319,9 @@ export class DBAlarm {
         metricName: "Deadlocks",
         dimensions: getDimensions(inst, ref),
       }),
-      threshold: threshold,
+      threshold: threshold
+        ? threshold
+        : DEFAULT_ALARM_OPTIONS.deadlockThreshold,
       period: Duration.seconds(60),
       comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
       alarmDescription: Fn.join("", [
