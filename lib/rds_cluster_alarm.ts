@@ -9,14 +9,9 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import { SnsEventSource } from "@aws-cdk/aws-lambda-event-sources";
 import { SlackWebhookProps } from "./slack_webhook";
 
-import {
-  Alarm,
-  Metric,
-  DimensionHash,
-  ComparisonOperator,
-} from "@aws-cdk/aws-cloudwatch";
+import { Alarm, Metric, ComparisonOperator } from "@aws-cdk/aws-cloudwatch";
 
-interface DatabaseAlarmOptions {
+interface DatabaseClusterAlarmOptions {
   highCpuEnabled?: boolean;
   highCpuPct?: number;
   lowMemoryEnabled?: boolean;
@@ -29,7 +24,8 @@ interface DatabaseAlarmOptions {
   deadlockThreshold?: number;
 }
 
-interface DefaultDatabaseAlarmOptions extends DatabaseAlarmOptions {
+interface DefaultDatabaseClusterAlarmOptions
+  extends DatabaseClusterAlarmOptions {
   highCpuEnabled: boolean;
   highCpuPct: number;
   lowMemoryEnabled: boolean;
@@ -42,7 +38,7 @@ interface DefaultDatabaseAlarmOptions extends DatabaseAlarmOptions {
   deadlockThreshold: number;
 }
 
-const DEFAULT_ALARM_OPTIONS: DefaultDatabaseAlarmOptions = {
+const DEFAULT_ALARM_OPTIONS: DefaultDatabaseClusterAlarmOptions = {
   writeLatencySeconds: 1,
   writeLatencyEnabled: true,
   readLatencySeconds: 1,
@@ -57,10 +53,13 @@ const DEFAULT_ALARM_OPTIONS: DefaultDatabaseAlarmOptions = {
 
 /**
  * Extend options with defaults
- * @param {DatabaseAlarmOptions} a - The options to extend
- * @param {DefaultDatabaseAlarmOptions} b - The options to use to extend a
+ * @param {DatabaseClusterAlarmOptions} a - The options to extend
+ * @param {DefaultDatabaseClusterAlarmOptions} b - The options to use to extend a
  **/
-let extend = (a: DatabaseAlarmOptions, b: DefaultDatabaseAlarmOptions) => {
+let extend = (
+  a: DatabaseClusterAlarmOptions,
+  b: DefaultDatabaseClusterAlarmOptions
+) => {
   Object.keys(b).forEach((k) => {
     if (!Object.prototype.hasOwnProperty.call(a, k)) {
       (a as any)[k] = (b as any)[k];
@@ -68,73 +67,85 @@ let extend = (a: DatabaseAlarmOptions, b: DefaultDatabaseAlarmOptions) => {
   });
 };
 
-export class DatabaseAlarm {
+export class DatabaseClusterAlarm {
   /**
-   * Create database instance alarms with sensible defaults
-   * @param {Stack} scope - the stack to create assets in
-   * @param {inst} inst - a DatabaseInstance
-   * @param {DatabaseAlarmOptions} options - options and overrides of alarm configuration
-   */
-  public static createInstanceAlarms(
+   * Create DatabaseCluster alarms, with sensible defaults, can override defaults
+   * @param {Stack} scope - a CDK stack to create assets in
+   * @param {DatabaseCluster} cluster - database cluster
+   * @param {DatabaseClusterAlarmOptions} options - override alarm configuration
+   * */
+  public static createClusterAlarms(
     scope: Stack,
-    inst: DatabaseInstance,
-    options?: DatabaseAlarmOptions
+    cluster: DatabaseCluster,
+    options?: DatabaseClusterAlarmOptions
   ) {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
     extend(alarmOptions, DEFAULT_ALARM_OPTIONS);
 
     if (alarmOptions.highCpuEnabled) {
-      DatabaseAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct);
+      DatabaseClusterAlarm.createCpuAlarm(
+        scope,
+        cluster,
+        alarmOptions.highCpuPct
+      );
     }
 
     if (alarmOptions.lowMemoryEnabled && alarmOptions.lowMemoryBytes) {
-      DatabaseAlarm.createFreeableMemoryAlarm(
+      DatabaseClusterAlarm.createFreeableMemoryAlarm(
         scope,
-        inst,
+        cluster,
         alarmOptions.lowMemoryBytes
       );
     }
 
-    if (alarmOptions.writeLatencyEnabled) {
-      DatabaseAlarm.createWriteLatencyAlarm(
+    if (alarmOptions.readLatencyEnabled) {
+      DatabaseClusterAlarm.createReadLatencyAlarm(
         scope,
-        inst,
+        cluster,
+        alarmOptions.readLatencySeconds
+      );
+    }
+
+    if (alarmOptions.writeLatencyEnabled) {
+      DatabaseClusterAlarm.createWriteLatencyAlarm(
+        scope,
+        cluster,
         alarmOptions.writeLatencySeconds
       );
     }
 
-    if (alarmOptions.readLatencyEnabled) {
-      DatabaseAlarm.createReadLatencyAlarm(
+    if (alarmOptions.deadLockEnabled) {
+      DatabaseClusterAlarm.createDeadlockAlarm(
         scope,
-        inst,
-        alarmOptions.readLatencySeconds
+        cluster,
+        alarmOptions.deadlockThreshold
       );
     }
   }
 
   /**
    * Create a CPU Alarm, by default uses a 90% average threshold over a 60 second duration
-   * @param {Stack} scope - as CDK Stack
-   * @param {DatabaseInstance} inst - a DatabaseInstance
+   * @param {Stack} scope - a CDK Stack
+   * @param {DatabaseCluster} cluster - a Database Cluster
    * @param {number} threshold - (percentage) of CPU Utilization
    **/
   static createCpuAlarm(
     scope: Stack,
-    inst: DatabaseInstance,
+    cluster: DatabaseCluster,
     threshold?: number
   ) {
-    new Alarm(scope, inst.node.id + "HighCpuAlarm", {
+    new Alarm(scope, cluster.node.id + "HighCpuAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "CPUUtilization",
         dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
+          DBClusterIdentifier: cluster.clusterIdentifier,
         },
       }),
       threshold: threshold ? threshold : DEFAULT_ALARM_OPTIONS.highCpuPct,
       period: Duration.seconds(60),
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-      alarmDescription: "High CPU Utilization: " + inst.instanceIdentifier,
+      alarmDescription: "High CPU Utilization:" + cluster.clusterIdentifier,
       evaluationPeriods: 1,
     });
   }
@@ -142,20 +153,20 @@ export class DatabaseAlarm {
   /**
    * Create a Write Latency Alarm, by default uses a 1 second average threshold over a 60 second duration
    * @param {Stack} scope - as CDK Stack
-   * @param {DatabaseInstance} inst - a DatabaseInstance or DatabaseCluster
-   * @param {number} threshold - (second) write latency
+   * @param {DatabaseCluster} cluster - a DatabaseCluster
+   * @param {number} threshold (second) write latency
    **/
   static createWriteLatencyAlarm(
     scope: Stack,
-    inst: DatabaseInstance,
+    cluster: DatabaseCluster,
     threshold?: number
   ) {
-    new Alarm(scope, inst.node.id + "WriteLatencyAlarm", {
+    new Alarm(scope, cluster.node.id + "WriteLatencyAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "WriteLatency",
         dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
+          DBClusterIdentifier: cluster.clusterIdentifier,
         },
       }),
       threshold: threshold
@@ -165,7 +176,7 @@ export class DatabaseAlarm {
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
       alarmDescription:
         "Write Latency excceded threshold for Resource:" +
-        inst.instanceIdentifier,
+        cluster.clusterIdentifier,
       evaluationPeriods: 1,
     });
   }
@@ -173,20 +184,20 @@ export class DatabaseAlarm {
   /**
    * Create a Read Latency Alarm, by default uses a 1 second average threshold over a 60 second duration
    * @param {Stack} scope - as CDK Stack
-   * @param {DatabaseInstance} inst - a DatabaseInstance
-   * @param {number} threshold - (second) write latency
+   * @param {DatabaseCluster} cluster - a DatabaseCluster
+   * @param {number} threshold (second) write latency
    **/
   static createReadLatencyAlarm(
     scope: Stack,
-    inst: DatabaseInstance,
+    cluster: DatabaseCluster,
     threshold?: number
   ) {
-    new Alarm(scope, inst.node.id + "ReadLatencyAlarm", {
+    new Alarm(scope, cluster.node.id + "ReadLatencyAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "ReadLatency",
         dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
+          DBClusterIdentifier: cluster.clusterIdentifier,
         },
       }),
       threshold: threshold
@@ -195,8 +206,8 @@ export class DatabaseAlarm {
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
       period: Duration.seconds(60),
       alarmDescription:
-        "Read Latency excceded threshold for Resource: " +
-        inst.instanceIdentifier,
+        "Read Latency excceded threshold for Resource:" +
+        cluster.clusterIdentifier,
       evaluationPeriods: 1,
     });
   }
@@ -204,28 +215,58 @@ export class DatabaseAlarm {
   /**
    * Create a Low Freeable Memory Alarm, average threshold over a 60 second duration
    * @param {Stack} scope - a CDK Stack
-   * @param {DatabaseInstance} inst - a DatabaseInstance
+   * @param {DatabaseCluster} cluster - a DatabaseCluster
    * @param {number} threshold - memory in bytes that are freeable
    **/
   static createFreeableMemoryAlarm(
     scope: Stack,
-    inst: DatabaseInstance,
+    cluster: DatabaseCluster,
     threshold?: number
   ) {
-    new Alarm(scope, inst.node.id + "LowFreeableMemory", {
+    new Alarm(scope, cluster.node.id + "LowFreeableMemory", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "FreeableMemory",
         dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
+          DBClusterIdentifier: cluster.clusterIdentifier,
         },
       }),
       threshold: threshold ? threshold : DEFAULT_ALARM_OPTIONS.lowMemoryBytes,
       period: Duration.seconds(60),
       comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
       alarmDescription:
-        "Read Latency excceded threshold for Resource: " +
-        inst.instanceIdentifier,
+        "Read Latency excceded threshold for Resource:" +
+        cluster.clusterIdentifier,
+      evaluationPeriods: 1,
+    });
+  }
+
+  /**
+   * Create a Deadlock Alarm, average threshold over a 60 second duration
+   * @param {Stack} scope - a CDK Stack
+   * @param {DatabaseCluster} cluster - a DatabaseCluster
+   * @param {number} threshold - memory in bytes that are freeable
+   **/
+  static createDeadlockAlarm(
+    scope: Stack,
+    cluster: DatabaseCluster,
+    threshold?: number
+  ) {
+    new Alarm(scope, cluster.node.id + "Deadlocks", {
+      metric: new Metric({
+        namespace: "AWS/RDS",
+        metricName: "Deadlocks",
+        dimensions: {
+          DBClusterIdentifier: cluster.clusterIdentifier,
+        },
+      }),
+      threshold: threshold
+        ? threshold
+        : DEFAULT_ALARM_OPTIONS.deadlockThreshold,
+      period: Duration.seconds(60),
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription:
+        "Deadlock threshold for Resource:" + cluster.clusterIdentifier,
       evaluationPeriods: 1,
     });
   }
@@ -233,14 +274,14 @@ export class DatabaseAlarm {
   /**
    * @param {Stack} scope - stack to create the resources in
    * @param {string} id - CDK identifier to form prefix
-   * @param {DatabaseInstance} inst - a Database Instance
+   * @param {DatabaseCluster} cluster - a Database Cluster
    * @param {SlackWebhookProps} slackWebHookProps - a Slack WebHook to write events to
    * @param {string[]} eventCategories - An array of RDS event categories of interest, these are detailed in the RDS documentation (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html#USER_Events.Messages)
    **/
   static subcribeEventsToSlack(
     scope: Stack,
     id: string,
-    inst: DatabaseInstance,
+    cluster: DatabaseCluster,
     slackWebHookProps: SlackWebhookProps,
     eventCategories?: string[]
   ) {
@@ -262,10 +303,10 @@ export class DatabaseAlarm {
 
     fn.addEventSource(new SnsEventSource(topic));
 
-    DatabaseAlarm.createEventSubscription(
+    DatabaseClusterAlarm.createEventSubscription(
       scope,
       id,
-      inst,
+      cluster,
       topic,
       eventCategories
     );
@@ -274,7 +315,7 @@ export class DatabaseAlarm {
   static createEventSubscription(
     scope: Stack,
     id: string,
-    inst: DatabaseInstance,
+    cluster: DatabaseCluster,
     topic: Topic,
     eventCategories?: string[]
   ) {
@@ -295,7 +336,7 @@ export class DatabaseAlarm {
 
     new CfnEventSubscription(scope, id + "EventSubscription", {
       snsTopicArn: topic.topicArn,
-      sourceIds: [inst.instanceIdentifier],
+      sourceIds: [cluster.clusterIdentifier],
       eventCategories: subscribeEventCategories,
     });
   }

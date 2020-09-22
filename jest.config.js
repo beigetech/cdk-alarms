@@ -8,7 +8,7 @@ module.exports = {
   coverageReporters: ['text-summary'],	
   coverageThreshold: {
     global: {
-	    branches: 95,
+	    branches: 90,
 	    functions: 80,
 	    lines: 80,
 	    statetments: 90
