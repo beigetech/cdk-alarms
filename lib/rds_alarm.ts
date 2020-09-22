@@ -349,7 +349,7 @@ export class DatabaseAlarm {
     let topic = new Topic(scope, id + "EventSubscriptionSns");
 
     let fn = new lambda.Function(scope, id + "EventProcessor", {
-      code: lambda.Code.fromAsset("resources/rds_event_to_slack"),
+      code: lambda.Code.fromAsset("functions/rds_event_to_slack"),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       timeout: Duration.seconds(15),

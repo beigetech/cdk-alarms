@@ -1,6 +1,6 @@
 module.exports = {
-	roots: ['<rootDir>/test', '<rootDir>/lib', '<rootDir>/resources'],
-	collectCoverageFrom: ['lib/*.js', '!lib/index.js', 'resources/**/*.js'],
+	roots: ['<rootDir>/test', '<rootDir>/lib', '<rootDir>/functions'],
+	collectCoverageFrom: ['lib/*.js', '!lib/index.js', 'functions/**/*.js'],
   testMatch: ['**/*.test.ts'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest'

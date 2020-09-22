@@ -1,4 +1,4 @@
-import * as unit from "../resources/log_event_to_slack/index";
+import * as unit from "../functions/log_event_to_slack/index";
 import * as fs from "fs";
 import * as https from "https";
 import { RequestOptions, IncomingMessage, ClientRequest } from "http";
