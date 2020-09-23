@@ -79,5 +79,5 @@ export async function handler(event: any, context: any) {
     logevents.map((logevent: any) =>
       sendToSlack(logevent.message, events.logStream, events.logGroup)
     )
-  ).then(ign => logevents);
+  ).then((ign) => logevents);
 }
