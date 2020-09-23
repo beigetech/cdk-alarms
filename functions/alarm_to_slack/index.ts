@@ -26,29 +26,31 @@ function sendToSlack(snsRecord: SnsRecord) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: message.AlarmName,
+          text: ":alarm_clock: *Alarm Triggered*: " + message.AlarmName,
         },
       },
       {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message.StateChangeTime,
-        },
+        type: "divider",
       },
       {
         type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message.AWSAccountId,
-        },
+        fields: [
+          {
+            type: "mrkdwn",
+            text: "*State Change: *" + message.StateChangeTime,
+          },
+          {
+            type: "mrkdwn",
+            text: "*Account:* " + message.AWSAccountId,
+          },
+          {
+            type: "mrkdwn",
+            text: "*Region:* " + message.Region,
+          },
+        ],
       },
       {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message.Region,
-        },
+        type: "divider",
       },
       {
         type: "section",
