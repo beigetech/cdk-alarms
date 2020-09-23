@@ -12,7 +12,7 @@ test("ECS Task State Change INFO", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext, (result: any) => {
+  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
     expect(result).toEqual({
       clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
       desiredStatus: "RUNNING",
@@ -31,7 +31,7 @@ test("ECS Task State Change ERROR", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext, (result: any) => {
+  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
     expect(result).toEqual({
       clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
       desiredStatus: "RUNNING",
@@ -50,7 +50,7 @@ test("ECS Service State Change INFO", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext, (result: any) => {
+  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
     expect(result).toEqual({
       clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/default",
       desiredStatus: undefined,

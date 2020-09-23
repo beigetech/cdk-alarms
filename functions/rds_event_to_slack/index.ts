@@ -81,11 +81,7 @@ async function sendToSlack(rdsChangeEvent: RDSChange): Promise<RDSChange> {
 /**
  * Process ECS events and send notifications to slack
  */
-export async function handler(
-  event: any,
-  context: any,
-  callback: any
-): Promise<RDSChange> {
+export async function handler(event: any, context: any): Promise<RDSChange> {
   let change: RDSChange;
 
   if (event["detail-type"] == HandledDetailTypes.INSTANCE_EVENT) {
@@ -94,7 +90,5 @@ export async function handler(
     return Promise.reject("unhandled RDS detail type or uninteresting event");
   }
 
-  return sendToSlack(change)
-    .then((ret) => callback(ret))
-    .catch((err) => console.log(err));
+  return sendToSlack(change);
 }
