@@ -6,13 +6,13 @@ import { URL } from "url";
 jest.mock("https");
 
 test("ECS Task State Change INFO", () => {
-  let mockTaskChangeEvent = JSON.parse(
+  const mockTaskChangeEvent = JSON.parse(
     fs.readFileSync("test_resources/ecs_task_change_info.json", "utf8")
   );
-  let mockContext = {};
-  assertSlackMessageBody({});
+  const mockContext = {};
+  assertSlackMessageBody();
 
-  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  const result = unit.handler(mockTaskChangeEvent, mockContext);
 
   expect(result).toEqual({
     clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
@@ -24,14 +24,14 @@ test("ECS Task State Change INFO", () => {
 });
 
 test("ECS Task State Change ERROR", () => {
-  let mockTaskChangeEvent = JSON.parse(
+  const mockTaskChangeEvent = JSON.parse(
     fs.readFileSync("test_resources/ecs_task_change_error.json", "utf8")
   );
 
-  let mockContext = {};
-  assertSlackMessageBody({});
+  const mockContext = {};
+  assertSlackMessageBody();
 
-  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  const result = unit.handler(mockTaskChangeEvent, mockContext);
   expect(result).toEqual({
     clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
     desiredStatus: "RUNNING",
@@ -42,14 +42,14 @@ test("ECS Task State Change ERROR", () => {
 });
 
 test("ECS Service State Change INFO", () => {
-  let mockTaskChangeEvent = JSON.parse(
+  const mockTaskChangeEvent = JSON.parse(
     fs.readFileSync("test_resources/ecs_service_change_info.json", "utf8")
   );
 
-  let mockContext = {};
-  assertSlackMessageBody({});
+  const mockContext = {};
+  assertSlackMessageBody();
 
-  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  const result = unit.handler(mockTaskChangeEvent, mockContext);
   expect(result).toEqual({
     clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/default",
     desiredStatus: undefined,
@@ -60,7 +60,7 @@ test("ECS Service State Change INFO", () => {
   });
 });
 
-function assertSlackMessageBody(obj: {}) {
+function assertSlackMessageBody() {
   jest.spyOn(https, "request").mockImplementation(
     (
       url: string | URL,

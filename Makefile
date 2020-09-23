@@ -6,6 +6,7 @@ install:
 test:
 	npm run build
 	npx prettier --check .
+	npx eslint **/*.ts --quiet
 	npx jest --coverage
 
 watch:

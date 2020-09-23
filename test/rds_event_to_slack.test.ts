@@ -6,13 +6,13 @@ import { URL } from "url";
 jest.mock("https");
 
 test("RDS Instance State Event", () => {
-  let mockTaskChangeEvent = JSON.parse(
+  const mockTaskChangeEvent = JSON.parse(
     fs.readFileSync("test_resources/rds_instance_change_info.json", "utf8")
   );
-  let mockContext = {};
-  assertSlackMessageBody({});
+  const mockContext = {};
+  assertSlackMessageBody();
 
-  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  const result = unit.handler(mockTaskChangeEvent, mockContext);
   expect(result).toEqual({
     dbInstanceIdentifier:
       "arn:aws:rds:us-east-1:123456789012:db:my-db-instance",
@@ -21,7 +21,7 @@ test("RDS Instance State Event", () => {
   });
 });
 
-function assertSlackMessageBody(obj: {}) {
+function assertSlackMessageBody() {
   jest.spyOn(https, "request").mockImplementation(
     (
       url: string | URL,

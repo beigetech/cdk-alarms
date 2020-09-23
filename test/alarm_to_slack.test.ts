@@ -6,17 +6,17 @@ import { URL } from "url";
 jest.mock("https");
 
 test("CloudWatch Alarm to Slack", () => {
-  let mockTaskChangeEvent = JSON.parse(
+  const mockTaskChangeEvent = JSON.parse(
     fs.readFileSync("test_resources/cloudwatch_alarm.json", "utf8")
   );
-  let mockContext = {};
-  assertSlackMessageBody({});
+  const mockContext = {};
+  assertSlackMessageBody();
 
-  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  const result = unit.handler(mockTaskChangeEvent, mockContext);
   expect(result).toBeTruthy();
 });
 
-function assertSlackMessageBody(obj: {}) {
+function assertSlackMessageBody() {
   jest.spyOn(https, "request").mockImplementation(
     (
       url: string | URL,

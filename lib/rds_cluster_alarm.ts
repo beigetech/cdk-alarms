@@ -1,9 +1,5 @@
-import { Construct, Duration, CfnElement, Fn } from "@aws-cdk/core";
-import {
-  DatabaseCluster,
-  DatabaseInstance,
-  CfnEventSubscription,
-} from "@aws-cdk/aws-rds";
+import { Construct, Duration } from "@aws-cdk/core";
+import { DatabaseCluster, CfnEventSubscription } from "@aws-cdk/aws-rds";
 import { Topic } from "@aws-cdk/aws-sns";
 import * as lambda from "@aws-cdk/aws-lambda";
 import { SnsEventSource } from "@aws-cdk/aws-lambda-event-sources";
@@ -64,10 +60,10 @@ export class DatabaseClusterAlarm {
     scope: Construct,
     cluster: DatabaseCluster,
     options?: DatabaseClusterAlarmOptions
-  ) {
+  ): void {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
     alarmOptions = { ...DEFAULT_ALARM_OPTIONS, ...alarmOptions };
-    let alarms: Alarm[] = [];
+    const alarms: Alarm[] = [];
 
     if (alarmOptions.highCpuEnabled) {
       alarms.push(
@@ -120,7 +116,7 @@ export class DatabaseClusterAlarm {
     }
 
     if (alarmOptions.topic) {
-      let snsTopic = alarmOptions.topic;
+      const snsTopic = alarmOptions.topic;
       alarms.forEach((alarm) => alarm.addAlarmAction(new SnsAction(snsTopic)));
     }
   }
@@ -286,10 +282,10 @@ export class DatabaseClusterAlarm {
     cluster: DatabaseCluster,
     slackWebHookProps: SlackWebhookProps,
     eventCategories?: string[]
-  ) {
-    let topic = new Topic(scope, id + "EventSubscriptionSns");
+  ): void {
+    const topic = new Topic(scope, id + "EventSubscriptionSns");
 
-    let fn = new lambda.Function(scope, id + "EventProcessor", {
+    const fn = new lambda.Function(scope, id + "EventProcessor", {
       code: lambda.Code.fromAsset("functions/rds_event_to_slack"),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
@@ -320,8 +316,8 @@ export class DatabaseClusterAlarm {
     cluster: DatabaseCluster,
     topic: Topic,
     eventCategories?: string[]
-  ) {
-    let subscribeEventCategories = eventCategories
+  ): void {
+    const subscribeEventCategories = eventCategories
       ? eventCategories
       : [
           "availability",

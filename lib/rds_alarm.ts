@@ -59,10 +59,10 @@ export class DatabaseAlarm {
     scope: Construct,
     inst: DatabaseInstance,
     options?: DatabaseAlarmOptions
-  ) {
+  ): void {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
     alarmOptions = { ...DEFAULT_ALARM_OPTIONS, ...alarmOptions };
-    let alarms: Alarm[] = [];
+    const alarms: Alarm[] = [];
 
     if (alarmOptions.highCpuEnabled) {
       alarms.push(
@@ -101,7 +101,7 @@ export class DatabaseAlarm {
     }
 
     if (alarmOptions.topic) {
-      let snsTopic = alarmOptions.topic;
+      const snsTopic = alarmOptions.topic;
       alarms.forEach((alarm) => {
         alarm.addAlarmAction(new SnsAction(snsTopic));
       });
@@ -239,10 +239,10 @@ export class DatabaseAlarm {
     inst: DatabaseInstance,
     slackWebHookProps: SlackWebhookProps,
     eventCategories?: string[]
-  ) {
-    let topic = new Topic(scope, id + "EventSubscriptionSns");
+  ): void {
+    const topic = new Topic(scope, id + "EventSubscriptionSns");
 
-    let fn = new lambda.Function(scope, id + "EventProcessor", {
+    const fn = new lambda.Function(scope, id + "EventProcessor", {
       code: lambda.Code.fromAsset("functions/rds_event_to_slack"),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
@@ -273,8 +273,8 @@ export class DatabaseAlarm {
     inst: DatabaseInstance,
     topic: Topic,
     eventCategories?: string[]
-  ) {
-    let subscribeEventCategories = eventCategories
+  ): void {
+    const subscribeEventCategories = eventCategories
       ? eventCategories
       : [
           "availability",

@@ -12,8 +12,8 @@ import { DatabaseAlarm } from "../lib/rds_alarm";
 import { Topic } from "@aws-cdk/aws-sns";
 
 test("Should create no alarms for RDS Instance", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -32,8 +32,8 @@ test("Should create no alarms for RDS Instance", () => {
 });
 
 test("Should generate default alarms for RDS Instance", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -60,8 +60,8 @@ test("Should generate default alarms for RDS Instance", () => {
 });
 
 test("Should generate default alarms for RDS Instance, and subcribe to topic", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -90,8 +90,8 @@ test("Should generate default alarms for RDS Instance, and subcribe to topic", (
 });
 
 test("Should generate custom event subscription for RDS Instance", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -121,8 +121,8 @@ test("Should generate custom event subscription for RDS Instance", () => {
 });
 
 test("Should generate default event subscription for RDS Instance", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -157,8 +157,8 @@ test("Should generate default event subscription for RDS Instance", () => {
 });
 
 test("Should create CPU alarm with default", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -177,8 +177,8 @@ test("Should create CPU alarm with default", () => {
 });
 
 test("Should create low memory alarm with default", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -196,8 +196,8 @@ test("Should create low memory alarm with default", () => {
 });
 
 test("Should create write latency alarm with default", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
@@ -215,8 +215,8 @@ test("Should create write latency alarm with default", () => {
 });
 
 test("Should create read latency alarm with default", () => {
-  let stack = new Stack();
-  let inst = new DatabaseInstance(stack, "test-instance", {
+  const stack = new Stack();
+  const inst = new DatabaseInstance(stack, "test-instance", {
     engine: DatabaseInstanceEngine.MYSQL,
     vpc: new Vpc(stack, "test-vpc"),
     masterUsername: "admin",
