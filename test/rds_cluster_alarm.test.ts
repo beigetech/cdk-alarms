@@ -1,12 +1,6 @@
 import "@aws-cdk/assert/jest";
-import { SynthUtils } from "@aws-cdk/assert";
 import { Stack, CfnElement, App, StackProps } from "@aws-cdk/core";
-import {
-  DatabaseCluster,
-  DatabaseClusterEngine,
-  DatabaseInstance,
-  DatabaseInstanceEngine,
-} from "@aws-cdk/aws-rds";
+import { DatabaseCluster, DatabaseClusterEngine } from "@aws-cdk/aws-rds";
 import {
   Vpc,
   InstanceType,
@@ -14,6 +8,7 @@ import {
   InstanceClass,
 } from "@aws-cdk/aws-ec2";
 import { DatabaseClusterAlarm } from "../lib/rds_cluster_alarm";
+import { Topic } from "@aws-cdk/aws-sns";
 
 test("Should generate default alarms for RDS Cluster", () => {
   let stack = new Stack();
@@ -77,6 +72,7 @@ test("Should custom alarms for RDS Cluster", () => {
     deadLockEnabled: false,
     writeLatencyEnabled: false,
     readLatencyEnabled: false,
+    topic: new Topic(stack, "SnsTopic"),
   });
 
   expect(stack).toHaveResourceLike("AWS::CloudWatch::Alarm", {

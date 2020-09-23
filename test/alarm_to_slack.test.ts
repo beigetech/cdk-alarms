@@ -1,24 +1,19 @@
-import * as unit from "../functions/rds_event_to_slack/index";
+import * as unit from "../functions/alarm_to_slack";
 import * as fs from "fs";
 import * as https from "https";
 import { RequestOptions, IncomingMessage, ClientRequest } from "http";
 import { URL } from "url";
 jest.mock("https");
 
-test("RDS Instance State Event", () => {
+test("CloudWatch Alarm to Slack", () => {
   let mockTaskChangeEvent = JSON.parse(
-    fs.readFileSync("test_resources/rds_instance_change_info.json", "utf8")
+    fs.readFileSync("test_resources/cloudwatch_alarm.json", "utf8")
   );
   let mockContext = {};
   assertSlackMessageBody({});
 
   return unit.handler(mockTaskChangeEvent, mockContext, (result: any) => {
-    expect(result).toEqual({
-      dbInstanceIdentifier:
-        "arn:aws:rds:us-east-1:123456789012:db:my-db-instance",
-      message: "A Multi-AZ failover has completed.",
-      eventType: "failover",
-    });
+    expect(result).toBeTruthy();
   });
 });
 

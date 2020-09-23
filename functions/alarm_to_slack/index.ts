@@ -1,49 +1,60 @@
 import * as https from "https";
 
-interface RDSChange {
-  dbInstanceIdentifier: string;
-  message: string;
-  eventType: string;
+interface SnsRecord {
+  Subject: string;
+  Message: string;
 }
 
-enum HandledDetailTypes {
-  INSTANCE_EVENT = "RDS DB Instance Event",
+interface SnsMessage {
+  Region: string;
+  AWSAccountId: string;
+  AlarmName: string;
+  StateChangeTime: string;
+  NewStateReason: string;
 }
 
-function handle_instance_state_change(event: any, context: any): RDSChange {
-  return {
-    dbInstanceIdentifier: event.detail.SourceArn,
-    message: event.detail.Message,
-    eventType: event.detail.EventCategories.join(","),
-  };
-}
+async function sendToSlack(snsRecord: SnsRecord) {
+  let message: SnsMessage = JSON.parse(snsRecord.Message);
 
-async function sendToSlack(rdsChangeEvent: RDSChange): Promise<RDSChange> {
   let data = JSON.stringify({
     channel: process.env.SLACK_CHANNELNAME,
     username: process.env.SLACK_USERNAME,
-    text: rdsChangeEvent.message,
+    text: snsRecord.Subject,
     icon_emoji: ":whale2:",
     blocks: [
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "ORCA: ECS " + rdsChangeEvent.eventType + " event",
+          text: message.AlarmName,
         },
       },
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "*RDS Instance*: `" + rdsChangeEvent.dbInstanceIdentifier + "`",
+          text: message.StateChangeTime,
         },
       },
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "```" + rdsChangeEvent.message + "```",
+          text: message.AWSAccountId,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: message.Region,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: message.NewStateReason,
         },
       },
     ],
@@ -74,27 +85,19 @@ async function sendToSlack(rdsChangeEvent: RDSChange): Promise<RDSChange> {
 
   request.write(data);
   request.end();
-
-  return rdsChangeEvent;
 }
 
 /**
- * Process ECS events and send notifications to slack
+ * Process CloudWatch alarms and send notifications to slack
  */
 export async function handler(
   event: any,
   context: any,
   callback: any
-): Promise<RDSChange> {
-  let change: RDSChange;
-
-  if (event["detail-type"] == HandledDetailTypes.INSTANCE_EVENT) {
-    change = handle_instance_state_change(event, context);
-  } else {
-    return Promise.reject("unhandled RDS detail type or uninteresting event");
-  }
-
-  return sendToSlack(change)
-    .then((ret) => callback(ret))
+): Promise<any> {
+  return Promise.all(
+    event.Records.map((record: any) => sendToSlack(record.Sns))
+  )
+    .then(callback(event))
     .catch((err) => console.log(err));
 }

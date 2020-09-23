@@ -1,20 +1,12 @@
-import { Stack, Duration, CfnElement, Fn } from "@aws-cdk/core";
-import {
-  DatabaseCluster,
-  DatabaseInstance,
-  CfnEventSubscription,
-} from "@aws-cdk/aws-rds";
+import { Stack, Duration } from "@aws-cdk/core";
+import { DatabaseInstance, CfnEventSubscription } from "@aws-cdk/aws-rds";
 import { Topic } from "@aws-cdk/aws-sns";
 import * as lambda from "@aws-cdk/aws-lambda";
 import { SnsEventSource } from "@aws-cdk/aws-lambda-event-sources";
 import { SlackWebhookProps } from "./slack_webhook";
+import { SnsAction } from "@aws-cdk/aws-cloudwatch-actions";
 
-import {
-  Alarm,
-  Metric,
-  DimensionHash,
-  ComparisonOperator,
-} from "@aws-cdk/aws-cloudwatch";
+import { Alarm, Metric, ComparisonOperator } from "@aws-cdk/aws-cloudwatch";
 
 interface DatabaseAlarmOptions {
   highCpuEnabled?: boolean;
@@ -27,6 +19,7 @@ interface DatabaseAlarmOptions {
   writeLatencySeconds?: number;
   deadLockEnabled?: boolean;
   deadlockThreshold?: number;
+  topic?: Topic;
 }
 
 interface DefaultDatabaseAlarmOptions extends DatabaseAlarmOptions {
@@ -55,19 +48,6 @@ const DEFAULT_ALARM_OPTIONS: DefaultDatabaseAlarmOptions = {
   deadlockThreshold: 1,
 };
 
-/**
- * Extend options with defaults
- * @param {DatabaseAlarmOptions} a - The options to extend
- * @param {DefaultDatabaseAlarmOptions} b - The options to use to extend a
- **/
-let extend = (a: DatabaseAlarmOptions, b: DefaultDatabaseAlarmOptions) => {
-  Object.keys(b).forEach((k) => {
-    if (!Object.prototype.hasOwnProperty.call(a, k)) {
-      (a as any)[k] = (b as any)[k];
-    }
-  });
-};
-
 export class DatabaseAlarm {
   /**
    * Create database instance alarms with sensible defaults
@@ -81,34 +61,50 @@ export class DatabaseAlarm {
     options?: DatabaseAlarmOptions
   ) {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
-    extend(alarmOptions, DEFAULT_ALARM_OPTIONS);
+    alarmOptions = { ...DEFAULT_ALARM_OPTIONS, ...alarmOptions };
+    let alarms: Alarm[] = [];
 
     if (alarmOptions.highCpuEnabled) {
-      DatabaseAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct);
+      alarms.push(
+        DatabaseAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct)
+      );
     }
 
     if (alarmOptions.lowMemoryEnabled && alarmOptions.lowMemoryBytes) {
-      DatabaseAlarm.createFreeableMemoryAlarm(
-        scope,
-        inst,
-        alarmOptions.lowMemoryBytes
+      alarms.push(
+        DatabaseAlarm.createFreeableMemoryAlarm(
+          scope,
+          inst,
+          alarmOptions.lowMemoryBytes
+        )
       );
     }
 
     if (alarmOptions.writeLatencyEnabled) {
-      DatabaseAlarm.createWriteLatencyAlarm(
-        scope,
-        inst,
-        alarmOptions.writeLatencySeconds
+      alarms.push(
+        DatabaseAlarm.createWriteLatencyAlarm(
+          scope,
+          inst,
+          alarmOptions.writeLatencySeconds
+        )
       );
     }
 
     if (alarmOptions.readLatencyEnabled) {
-      DatabaseAlarm.createReadLatencyAlarm(
-        scope,
-        inst,
-        alarmOptions.readLatencySeconds
+      alarms.push(
+        DatabaseAlarm.createReadLatencyAlarm(
+          scope,
+          inst,
+          alarmOptions.readLatencySeconds
+        )
       );
+    }
+
+    if (alarmOptions.topic) {
+      let snsTopic = alarmOptions.topic;
+      alarms.forEach((alarm) => {
+        alarm.addAlarmAction(new SnsAction(snsTopic));
+      });
     }
   }
 
@@ -122,8 +118,8 @@ export class DatabaseAlarm {
     scope: Stack,
     inst: DatabaseInstance,
     threshold?: number
-  ) {
-    new Alarm(scope, inst.node.id + "HighCpuAlarm", {
+  ): Alarm {
+    return new Alarm(scope, inst.node.id + "HighCpuAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "CPUUtilization",
@@ -149,8 +145,8 @@ export class DatabaseAlarm {
     scope: Stack,
     inst: DatabaseInstance,
     threshold?: number
-  ) {
-    new Alarm(scope, inst.node.id + "WriteLatencyAlarm", {
+  ): Alarm {
+    return new Alarm(scope, inst.node.id + "WriteLatencyAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "WriteLatency",
@@ -180,8 +176,8 @@ export class DatabaseAlarm {
     scope: Stack,
     inst: DatabaseInstance,
     threshold?: number
-  ) {
-    new Alarm(scope, inst.node.id + "ReadLatencyAlarm", {
+  ): Alarm {
+    return new Alarm(scope, inst.node.id + "ReadLatencyAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "ReadLatency",
@@ -211,8 +207,8 @@ export class DatabaseAlarm {
     scope: Stack,
     inst: DatabaseInstance,
     threshold?: number
-  ) {
-    new Alarm(scope, inst.node.id + "LowFreeableMemory", {
+  ): Alarm {
+    return new Alarm(scope, inst.node.id + "LowFreeableMemory", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "FreeableMemory",

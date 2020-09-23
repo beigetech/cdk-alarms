@@ -82,7 +82,7 @@ function handle_service_state_change(event: any, context: any): ECSChange {
   };
 }
 
-async function sendToSlack(ecsChangeEvent: ECSChange) {
+async function sendToSlack(ecsChangeEvent: ECSChange): Promise<ECSChange> {
   let desiredStatus = ecsChangeEvent.desiredStatus
     ? ecsChangeEvent.desiredStatus
     : "UNKNOWN";
@@ -159,12 +159,18 @@ async function sendToSlack(ecsChangeEvent: ECSChange) {
 
   request.write(data);
   request.end();
+
+  return ecsChangeEvent;
 }
 
 /**
  * Process ECS events and send notifications to slack
  */
-export async function handler(event: any, context: any): Promise<ECSChange> {
+export async function handler(
+  event: any,
+  context: any,
+  callback: any
+): Promise<ECSChange> {
   let change: ECSChange;
 
   if (event["detail-type"] == HandledDetailTypes.TASK_STATE_CHANGE) {
@@ -175,7 +181,7 @@ export async function handler(event: any, context: any): Promise<ECSChange> {
     return Promise.reject("unhandled ECS detail type");
   }
 
-  await sendToSlack(change);
-
-  return Promise.resolve(change);
+  return sendToSlack(change)
+    .then((ret) => callback(ret))
+    .catch((err) => console.log(err));
 }
