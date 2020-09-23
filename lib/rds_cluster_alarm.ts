@@ -10,6 +10,7 @@ import { SnsEventSource } from "@aws-cdk/aws-lambda-event-sources";
 import { SlackWebhookProps } from "./slack_webhook";
 
 import { Alarm, Metric, ComparisonOperator } from "@aws-cdk/aws-cloudwatch";
+import { SnsAction } from "@aws-cdk/aws-cloudwatch-actions";
 
 interface DatabaseClusterAlarmOptions {
   highCpuEnabled?: boolean;
@@ -22,6 +23,7 @@ interface DatabaseClusterAlarmOptions {
   writeLatencySeconds?: number;
   deadLockEnabled?: boolean;
   deadlockThreshold?: number;
+  topic?: Topic;
 }
 
 interface DefaultDatabaseClusterAlarmOptions
@@ -65,45 +67,61 @@ export class DatabaseClusterAlarm {
   ) {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
     alarmOptions = { ...DEFAULT_ALARM_OPTIONS, ...alarmOptions };
+    let alarms: Alarm[] = [];
 
     if (alarmOptions.highCpuEnabled) {
-      DatabaseClusterAlarm.createCpuAlarm(
-        scope,
-        cluster,
-        alarmOptions.highCpuPct
+      alarms.push(
+        DatabaseClusterAlarm.createCpuAlarm(
+          scope,
+          cluster,
+          alarmOptions.highCpuPct
+        )
       );
     }
 
     if (alarmOptions.lowMemoryEnabled && alarmOptions.lowMemoryBytes) {
-      DatabaseClusterAlarm.createFreeableMemoryAlarm(
-        scope,
-        cluster,
-        alarmOptions.lowMemoryBytes
+      alarms.push(
+        DatabaseClusterAlarm.createFreeableMemoryAlarm(
+          scope,
+          cluster,
+          alarmOptions.lowMemoryBytes
+        )
       );
     }
 
     if (alarmOptions.readLatencyEnabled) {
-      DatabaseClusterAlarm.createReadLatencyAlarm(
-        scope,
-        cluster,
-        alarmOptions.readLatencySeconds
+      alarms.push(
+        DatabaseClusterAlarm.createReadLatencyAlarm(
+          scope,
+          cluster,
+          alarmOptions.readLatencySeconds
+        )
       );
     }
 
     if (alarmOptions.writeLatencyEnabled) {
-      DatabaseClusterAlarm.createWriteLatencyAlarm(
-        scope,
-        cluster,
-        alarmOptions.writeLatencySeconds
+      alarms.push(
+        DatabaseClusterAlarm.createWriteLatencyAlarm(
+          scope,
+          cluster,
+          alarmOptions.writeLatencySeconds
+        )
       );
     }
 
     if (alarmOptions.deadLockEnabled) {
-      DatabaseClusterAlarm.createDeadlockAlarm(
-        scope,
-        cluster,
-        alarmOptions.deadlockThreshold
+      alarms.push(
+        DatabaseClusterAlarm.createDeadlockAlarm(
+          scope,
+          cluster,
+          alarmOptions.deadlockThreshold
+        )
       );
+    }
+
+    if (alarmOptions.topic) {
+      let snsTopic = alarmOptions.topic;
+      alarms.forEach((alarm) => alarm.addAlarmAction(new SnsAction(snsTopic)));
     }
   }
 
@@ -117,8 +135,8 @@ export class DatabaseClusterAlarm {
     scope: Stack,
     cluster: DatabaseCluster,
     threshold?: number
-  ) {
-    new Alarm(scope, cluster.node.id + "HighCpuAlarm", {
+  ): Alarm {
+    return new Alarm(scope, cluster.node.id + "HighCpuAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "CPUUtilization",
@@ -144,8 +162,8 @@ export class DatabaseClusterAlarm {
     scope: Stack,
     cluster: DatabaseCluster,
     threshold?: number
-  ) {
-    new Alarm(scope, cluster.node.id + "WriteLatencyAlarm", {
+  ): Alarm {
+    return new Alarm(scope, cluster.node.id + "WriteLatencyAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "WriteLatency",
@@ -175,8 +193,8 @@ export class DatabaseClusterAlarm {
     scope: Stack,
     cluster: DatabaseCluster,
     threshold?: number
-  ) {
-    new Alarm(scope, cluster.node.id + "ReadLatencyAlarm", {
+  ): Alarm {
+    return new Alarm(scope, cluster.node.id + "ReadLatencyAlarm", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "ReadLatency",
@@ -206,8 +224,8 @@ export class DatabaseClusterAlarm {
     scope: Stack,
     cluster: DatabaseCluster,
     threshold?: number
-  ) {
-    new Alarm(scope, cluster.node.id + "LowFreeableMemory", {
+  ): Alarm {
+    return new Alarm(scope, cluster.node.id + "LowFreeableMemory", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "FreeableMemory",
@@ -235,8 +253,8 @@ export class DatabaseClusterAlarm {
     scope: Stack,
     cluster: DatabaseCluster,
     threshold?: number
-  ) {
-    new Alarm(scope, cluster.node.id + "Deadlocks", {
+  ): Alarm {
+    return new Alarm(scope, cluster.node.id + "Deadlocks", {
       metric: new Metric({
         namespace: "AWS/RDS",
         metricName: "Deadlocks",
