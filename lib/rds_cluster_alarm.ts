@@ -1,4 +1,4 @@
-import { Stack, Duration, CfnElement, Fn } from "@aws-cdk/core";
+import { Construct, Duration, CfnElement, Fn } from "@aws-cdk/core";
 import {
   DatabaseCluster,
   DatabaseInstance,
@@ -56,12 +56,12 @@ const DEFAULT_ALARM_OPTIONS: DefaultDatabaseClusterAlarmOptions = {
 export class DatabaseClusterAlarm {
   /**
    * Create DatabaseCluster alarms, with sensible defaults, can override defaults
-   * @param {Stack} scope - a CDK stack to create assets in
+   * @param {Construct} scope - a CDK stack to create assets in
    * @param {DatabaseCluster} cluster - database cluster
    * @param {DatabaseClusterAlarmOptions} options - override alarm configuration
    * */
   public static createClusterAlarms(
-    scope: Stack,
+    scope: Construct,
     cluster: DatabaseCluster,
     options?: DatabaseClusterAlarmOptions
   ) {
@@ -127,12 +127,12 @@ export class DatabaseClusterAlarm {
 
   /**
    * Create a CPU Alarm, by default uses a 90% average threshold over a 60 second duration
-   * @param {Stack} scope - a CDK Stack
+   * @param {Construct} scope - a CDK Construct
    * @param {DatabaseCluster} cluster - a Database Cluster
    * @param {number} threshold - (percentage) of CPU Utilization
    **/
   static createCpuAlarm(
-    scope: Stack,
+    scope: Construct,
     cluster: DatabaseCluster,
     threshold?: number
   ): Alarm {
@@ -154,12 +154,12 @@ export class DatabaseClusterAlarm {
 
   /**
    * Create a Write Latency Alarm, by default uses a 1 second average threshold over a 60 second duration
-   * @param {Stack} scope - as CDK Stack
+   * @param {Construct} scope - as CDK Construct
    * @param {DatabaseCluster} cluster - a DatabaseCluster
    * @param {number} threshold (second) write latency
    **/
   static createWriteLatencyAlarm(
-    scope: Stack,
+    scope: Construct,
     cluster: DatabaseCluster,
     threshold?: number
   ): Alarm {
@@ -185,12 +185,12 @@ export class DatabaseClusterAlarm {
 
   /**
    * Create a Read Latency Alarm, by default uses a 1 second average threshold over a 60 second duration
-   * @param {Stack} scope - as CDK Stack
+   * @param {Construct} scope - as CDK Construct
    * @param {DatabaseCluster} cluster - a DatabaseCluster
    * @param {number} threshold (second) write latency
    **/
   static createReadLatencyAlarm(
-    scope: Stack,
+    scope: Construct,
     cluster: DatabaseCluster,
     threshold?: number
   ): Alarm {
@@ -216,12 +216,12 @@ export class DatabaseClusterAlarm {
 
   /**
    * Create a Low Freeable Memory Alarm, average threshold over a 60 second duration
-   * @param {Stack} scope - a CDK Stack
+   * @param {Construct} scope - a CDK Construct
    * @param {DatabaseCluster} cluster - a DatabaseCluster
    * @param {number} threshold - memory in bytes that are freeable
    **/
   static createFreeableMemoryAlarm(
-    scope: Stack,
+    scope: Construct,
     cluster: DatabaseCluster,
     threshold?: number
   ): Alarm {
@@ -245,12 +245,12 @@ export class DatabaseClusterAlarm {
 
   /**
    * Create a Deadlock Alarm, average threshold over a 60 second duration
-   * @param {Stack} scope - a CDK Stack
+   * @param {Construct} scope - a CDK Construct
    * @param {DatabaseCluster} cluster - a DatabaseCluster
    * @param {number} threshold - memory in bytes that are freeable
    **/
   static createDeadlockAlarm(
-    scope: Stack,
+    scope: Construct,
     cluster: DatabaseCluster,
     threshold?: number
   ): Alarm {
@@ -274,14 +274,14 @@ export class DatabaseClusterAlarm {
   }
 
   /**
-   * @param {Stack} scope - stack to create the resources in
+   * @param {Construct} scope - stack to create the resources in
    * @param {string} id - CDK identifier to form prefix
    * @param {DatabaseCluster} cluster - a Database Cluster
    * @param {SlackWebhookProps} slackWebHookProps - a Slack WebHook to write events to
    * @param {string[]} eventCategories - An array of RDS event categories of interest, these are detailed in the RDS documentation (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html#USER_Events.Messages)
    **/
   static subcribeEventsToSlack(
-    scope: Stack,
+    scope: Construct,
     id: string,
     cluster: DatabaseCluster,
     slackWebHookProps: SlackWebhookProps,
@@ -315,7 +315,7 @@ export class DatabaseClusterAlarm {
   }
 
   static createEventSubscription(
-    scope: Stack,
+    scope: Construct,
     id: string,
     cluster: DatabaseCluster,
     topic: Topic,
