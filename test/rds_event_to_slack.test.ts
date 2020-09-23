@@ -12,7 +12,7 @@ test("RDS Instance State Event", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext, (result: any) => {
+  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
     expect(result).toEqual({
       dbInstanceIdentifier:
         "arn:aws:rds:us-east-1:123456789012:db:my-db-instance",

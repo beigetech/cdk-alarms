@@ -166,11 +166,7 @@ async function sendToSlack(ecsChangeEvent: ECSChange): Promise<ECSChange> {
 /**
  * Process ECS events and send notifications to slack
  */
-export async function handler(
-  event: any,
-  context: any,
-  callback: any
-): Promise<ECSChange> {
+export async function handler(event: any, context: any): Promise<ECSChange> {
   let change: ECSChange;
 
   if (event["detail-type"] == HandledDetailTypes.TASK_STATE_CHANGE) {
@@ -181,7 +177,5 @@ export async function handler(
     return Promise.reject("unhandled ECS detail type");
   }
 
-  return sendToSlack(change)
-    .then((ret) => callback(ret))
-    .catch((err) => console.log(err));
+  return sendToSlack(change);
 }
