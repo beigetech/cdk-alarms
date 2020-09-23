@@ -6,11 +6,8 @@ test_infra:
   image: node:12
   stage: test 
   script:
-  - npm install
-  - npm run build  
-  - npx prettier --check .  
-  - npm run test 
-  - npx jest --coverage  
+  - make install
+  - make test  
 
 release:
   image: node:12

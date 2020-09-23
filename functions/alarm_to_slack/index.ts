@@ -13,7 +13,7 @@ interface SnsMessage {
   NewStateReason: string;
 }
 
-async function sendToSlack(snsRecord: SnsRecord) {
+function sendToSlack(snsRecord: SnsRecord) {
   let message: SnsMessage = JSON.parse(snsRecord.Message);
 
   let data = JSON.stringify({
@@ -90,9 +90,9 @@ async function sendToSlack(snsRecord: SnsRecord) {
 /**
  * Process CloudWatch alarms and send notifications to slack
  */
-export async function handler(event: any, context: any): Promise<any> {
+export function handler(event: any, context: any): Promise<any> {
   console.log(JSON.stringify(event));
-  return Promise.all(
-    event.Records.map((record: any) => sendToSlack(record.Sns))
-  );
+
+  event.Records.map((record: any) => sendToSlack(record.Sns));
+  return event;
 }

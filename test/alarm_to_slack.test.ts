@@ -12,9 +12,8 @@ test("CloudWatch Alarm to Slack", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
-    expect(result).toBeTruthy();
-  });
+  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  expect(result).toBeTruthy();
 });
 
 function assertSlackMessageBody(obj: {}) {

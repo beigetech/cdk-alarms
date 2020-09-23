@@ -12,14 +12,14 @@ test("ECS Task State Change INFO", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
-    expect(result).toEqual({
-      clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
-      desiredStatus: "RUNNING",
-      lastStatus: "RUNNING",
-      extra: "Container: FargateApp status: RUNNING",
-      eventType: "INFO",
-    });
+  let result = unit.handler(mockTaskChangeEvent, mockContext);
+
+  expect(result).toEqual({
+    clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
+    desiredStatus: "RUNNING",
+    lastStatus: "RUNNING",
+    extra: "Container: FargateApp status: RUNNING",
+    eventType: "INFO",
   });
 });
 
@@ -31,14 +31,13 @@ test("ECS Task State Change ERROR", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
-    expect(result).toEqual({
-      clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
-      desiredStatus: "RUNNING",
-      lastStatus: "STOPPED",
-      extra: "Container: FargateApp status: RUNNING",
-      eventType: "ERROR",
-    });
+  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  expect(result).toEqual({
+    clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/FargateCluster",
+    desiredStatus: "RUNNING",
+    lastStatus: "STOPPED",
+    extra: "Container: FargateApp status: RUNNING",
+    eventType: "ERROR",
   });
 });
 
@@ -50,15 +49,14 @@ test("ECS Service State Change INFO", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(mockTaskChangeEvent, mockContext).then((result) => {
-    expect(result).toEqual({
-      clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/default",
-      desiredStatus: undefined,
-      lastStatus: undefined,
-      extra:
-        "Service: arn:aws:ecs:us-west-2:111122223333:service/default/servicetest, The service is healthy and at the desired number of tasks, thus reaching a steady state.",
-      eventType: "INFO",
-    });
+  let result = unit.handler(mockTaskChangeEvent, mockContext);
+  expect(result).toEqual({
+    clusterName: "arn:aws:ecs:us-west-2:111122223333:cluster/default",
+    desiredStatus: undefined,
+    lastStatus: undefined,
+    extra:
+      "Service: arn:aws:ecs:us-west-2:111122223333:service/default/servicetest, The service is healthy and at the desired number of tasks, thus reaching a steady state.",
+    eventType: "INFO",
   });
 });
 

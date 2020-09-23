@@ -1,5 +1,4 @@
 import * as unit from "../functions/log_event_to_slack/index";
-import * as fs from "fs";
 import * as https from "https";
 import { RequestOptions, IncomingMessage, ClientRequest } from "http";
 import { URL } from "url";
@@ -27,9 +26,8 @@ test("Log error event to slack", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(preparedEvent, mockContext).then((result) => {
-    expect(result).toEqual(event.logEvents);
-  });
+  let result = unit.handler(preparedEvent, mockContext);
+  expect(result).toEqual(event.logEvents);
 });
 
 function assertSlackMessageBody(obj: {}) {

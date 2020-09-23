@@ -1,11 +1,7 @@
 import * as https from "https";
 const zlib = require("zlib");
 
-async function sendToSlack(
-  message: string,
-  log_stream: string,
-  log_group: string
-) {
+function sendToSlack(message: string, log_stream: string, log_group: string) {
   let data = JSON.stringify({
     channel: process.env.SLACK_CHANNELNAME,
     username: process.env.SLACK_USERNAME,
@@ -70,14 +66,13 @@ async function sendToSlack(
   request.end();
 }
 
-export async function handler(event: any, context: any) {
+export function handler(event: any, context: any) {
   let payload = Buffer.from(event.awslogs.data, "base64");
   const events = JSON.parse(zlib.unzipSync(payload).toString());
   const logevents = events.logEvents;
 
-  return Promise.all(
-    logevents.map((logevent: any) =>
-      sendToSlack(logevent.message, events.logStream, events.logGroup)
-    )
-  ).then((ign) => logevents);
+  logevents.forEach((logevent: any) => {
+    sendToSlack(logevent.message, events.logStream, events.logGroup);
+  });
+  return logevents;
 }
