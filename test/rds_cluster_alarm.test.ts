@@ -11,9 +11,9 @@ import { DatabaseClusterAlarm } from "../lib/rds_cluster_alarm";
 import { Topic } from "@aws-cdk/aws-sns";
 
 test("Should generate default alarms for RDS Cluster", () => {
-  let stack = new Stack();
+  const stack = new Stack();
 
-  let cluster = new DatabaseCluster(stack, "test-cluster", {
+  const cluster = new DatabaseCluster(stack, "test-cluster", {
     engine: DatabaseClusterEngine.AURORA_MYSQL,
     masterUser: {
       username: "admin",
@@ -52,9 +52,9 @@ test("Should generate default alarms for RDS Cluster", () => {
 });
 
 test("Should custom alarms for RDS Cluster", () => {
-  let stack = new Stack();
+  const stack = new Stack();
 
-  let cluster = new DatabaseCluster(stack, "test-cluster", {
+  const cluster = new DatabaseCluster(stack, "test-cluster", {
     engine: DatabaseClusterEngine.AURORA_MYSQL,
     masterUser: {
       username: "admin",
@@ -101,9 +101,9 @@ test("Should custom alarms for RDS Cluster", () => {
 });
 
 test("Should create no alarms for RDS Cluster", () => {
-  let stack = new Stack();
+  const stack = new Stack();
 
-  let cluster = new DatabaseCluster(stack, "test-cluster", {
+  const cluster = new DatabaseCluster(stack, "test-cluster", {
     engine: DatabaseClusterEngine.AURORA_MYSQL,
     masterUser: {
       username: "admin",
@@ -126,9 +126,9 @@ test("Should create no alarms for RDS Cluster", () => {
 });
 
 test("Should generate event subscription for RDS Cluster", () => {
-  let stack = new Stack();
+  const stack = new Stack();
 
-  let cluster = new DatabaseCluster(stack, "test-cluster", {
+  const cluster = new DatabaseCluster(stack, "test-cluster", {
     engine: DatabaseClusterEngine.AURORA_MYSQL,
     masterUser: {
       username: "admin",
@@ -167,9 +167,9 @@ test("Should generate event subscription for RDS Cluster", () => {
 });
 
 test("Should create deadlock alarm with default", () => {
-  let stack = new Stack();
+  const stack = new Stack();
 
-  let cluster = new DatabaseCluster(stack, "test-cluster", {
+  const cluster = new DatabaseCluster(stack, "test-cluster", {
     engine: DatabaseClusterEngine.AURORA_MYSQL,
     masterUser: {
       username: "admin",
@@ -210,10 +210,10 @@ class OuterCdkStack extends Stack {
 }
 
 test("Should create alarms when cluster lives another stack via import", () => {
-  let app = new App();
-  let outerStack = new OuterCdkStack(app, "outer");
+  const app = new App();
+  const outerStack = new OuterCdkStack(app, "outer");
 
-  let innerStack = new Stack(app, "inner");
+  const innerStack = new Stack(app, "inner");
   DatabaseClusterAlarm.createDeadlockAlarm(innerStack, outerStack.cluster);
 
   expect(innerStack).toHaveResourceLike("AWS::CloudWatch::Alarm", {

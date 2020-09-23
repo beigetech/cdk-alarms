@@ -6,7 +6,7 @@ import * as zlib from "zlib";
 jest.mock("https");
 
 test("Log error event to slack", () => {
-  let event = {
+  const event = {
     logEvents: [
       {
         logStream: "abc",
@@ -15,22 +15,22 @@ test("Log error event to slack", () => {
       },
     ],
   };
-  let compressedMessage = zlib.gzipSync(Buffer.from(JSON.stringify(event)));
+  const compressedMessage = zlib.gzipSync(Buffer.from(JSON.stringify(event)));
 
-  let preparedEvent = {
+  const preparedEvent = {
     awslogs: {
       data: compressedMessage.toString("base64"),
     },
   };
 
-  let mockContext = {};
-  assertSlackMessageBody({});
+  const mockContext = {};
+  assertSlackMessageBody();
 
-  let result = unit.handler(preparedEvent, mockContext);
+  const result = unit.handler(preparedEvent, mockContext);
   expect(result).toEqual(event.logEvents);
 });
 
-function assertSlackMessageBody(obj: {}) {
+function assertSlackMessageBody() {
   jest.spyOn(https, "request").mockImplementation(
     (
       url: string | URL,
