@@ -18,7 +18,7 @@ function handle_instance_state_change(event: any, context: any): RDSChange {
   };
 }
 
-async function sendToSlack(rdsChangeEvent: RDSChange): Promise<RDSChange> {
+function sendToSlack(rdsChangeEvent: RDSChange): RDSChange {
   let data = JSON.stringify({
     channel: process.env.SLACK_CHANNELNAME,
     username: process.env.SLACK_USERNAME,
@@ -81,13 +81,13 @@ async function sendToSlack(rdsChangeEvent: RDSChange): Promise<RDSChange> {
 /**
  * Process ECS events and send notifications to slack
  */
-export async function handler(event: any, context: any): Promise<RDSChange> {
+export function handler(event: any, context: any): RDSChange {
   let change: RDSChange;
 
   if (event["detail-type"] == HandledDetailTypes.INSTANCE_EVENT) {
     change = handle_instance_state_change(event, context);
   } else {
-    return Promise.reject("unhandled RDS detail type or uninteresting event");
+    throw "unhandled RDS detail type or uninteresting event";
   }
 
   return sendToSlack(change);

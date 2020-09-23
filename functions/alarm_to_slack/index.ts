@@ -13,7 +13,7 @@ interface SnsMessage {
   NewStateReason: string;
 }
 
-async function sendToSlack(snsRecord: SnsRecord) {
+function sendToSlack(snsRecord: SnsRecord) {
   let message: SnsMessage = JSON.parse(snsRecord.Message);
 
   let data = JSON.stringify({
@@ -26,29 +26,31 @@ async function sendToSlack(snsRecord: SnsRecord) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: message.AlarmName,
+          text: ":alarm_clock: *Alarm Triggered*: " + message.AlarmName,
         },
       },
       {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message.StateChangeTime,
-        },
+        type: "divider",
       },
       {
         type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message.AWSAccountId,
-        },
+        fields: [
+          {
+            type: "mrkdwn",
+            text: "*State Change: *" + message.StateChangeTime,
+          },
+          {
+            type: "mrkdwn",
+            text: "*Account:* " + message.AWSAccountId,
+          },
+          {
+            type: "mrkdwn",
+            text: "*Region:* " + message.Region,
+          },
+        ],
       },
       {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message.Region,
-        },
+        type: "divider",
       },
       {
         type: "section",
@@ -90,9 +92,9 @@ async function sendToSlack(snsRecord: SnsRecord) {
 /**
  * Process CloudWatch alarms and send notifications to slack
  */
-export async function handler(event: any, context: any): Promise<any> {
+export function handler(event: any, context: any): Promise<any> {
   console.log(JSON.stringify(event));
-  return Promise.all(
-    event.Records.map((record: any) => sendToSlack(record.Sns))
-  );
+
+  event.Records.map((record: any) => sendToSlack(record.Sns));
+  return event;
 }
