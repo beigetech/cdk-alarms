@@ -51,22 +51,6 @@ const DEFAULT_ALARM_OPTIONS: DefaultDatabaseClusterAlarmOptions = {
   deadlockThreshold: 1,
 };
 
-/**
- * Extend options with defaults
- * @param {DatabaseClusterAlarmOptions} a - The options to extend
- * @param {DefaultDatabaseClusterAlarmOptions} b - The options to use to extend a
- **/
-let extend = (
-  a: DatabaseClusterAlarmOptions,
-  b: DefaultDatabaseClusterAlarmOptions
-) => {
-  Object.keys(b).forEach((k) => {
-    if (!Object.prototype.hasOwnProperty.call(a, k)) {
-      (a as any)[k] = (b as any)[k];
-    }
-  });
-};
-
 export class DatabaseClusterAlarm {
   /**
    * Create DatabaseCluster alarms, with sensible defaults, can override defaults
@@ -80,7 +64,7 @@ export class DatabaseClusterAlarm {
     options?: DatabaseClusterAlarmOptions
   ) {
     let alarmOptions = options ? options : DEFAULT_ALARM_OPTIONS;
-    extend(alarmOptions, DEFAULT_ALARM_OPTIONS);
+    alarmOptions = { ...DEFAULT_ALARM_OPTIONS, ...alarmOptions };
 
     if (alarmOptions.highCpuEnabled) {
       DatabaseClusterAlarm.createCpuAlarm(

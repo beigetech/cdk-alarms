@@ -27,8 +27,8 @@ test("Log error event to slack", () => {
   let mockContext = {};
   assertSlackMessageBody({});
 
-  return unit.handler(preparedEvent, mockContext).then((result: any) => {
-    expect(result).toEqual(event);
+  return unit.handler(preparedEvent, mockContext, (result: any) => {
+    expect(result).toEqual(event.logEvents);
   });
 });
 

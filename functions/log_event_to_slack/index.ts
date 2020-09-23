@@ -70,14 +70,16 @@ async function sendToSlack(
   request.end();
 }
 
-export async function handler(event: any, context: any) {
+export async function handler(event: any, context: any, callback: any) {
   let payload = Buffer.from(event.awslogs.data, "base64");
   const events = JSON.parse(zlib.unzipSync(payload).toString());
   const logevents = events.logEvents;
 
-  await logevents.forEach((logevent: any) =>
-    sendToSlack(logevent.message, events.logStream, events.logGroup)
-  );
-
-  return Promise.resolve(events);
+  return Promise.all(
+    logevents.map((logevent: any) =>
+      sendToSlack(logevent.message, events.logStream, events.logGroup)
+    )
+  )
+    .then(callback(logevents))
+    .catch((err) => console.log(err));
 }
