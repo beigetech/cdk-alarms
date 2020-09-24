@@ -21,6 +21,22 @@ test("RDS Instance State Event", () => {
   });
 });
 
+test("RDS Cluster State Event", () => {
+  const mockTaskChangeEvent = JSON.parse(
+    fs.readFileSync("test_resources/rds_cluster_change_info.json", "utf8")
+  );
+  const mockContext = {};
+  assertSlackMessageBody();
+
+  const result = unit.handler(mockTaskChangeEvent, mockContext);
+  expect(result).toEqual({
+    dbInstanceIdentifier:
+      "arn:aws:rds:us-east-1:123456789012:cluster:my-db-cluster",
+    eventType: "notification",
+    message: "Database cluster has been patched",
+  });
+});
+
 function assertSlackMessageBody() {
   jest.spyOn(https, "request").mockImplementation(
     (

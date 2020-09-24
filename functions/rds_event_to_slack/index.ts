@@ -8,6 +8,7 @@ interface RDSChange {
 
 enum HandledDetailTypes {
   INSTANCE_EVENT = "RDS DB Instance Event",
+  CLUSTER_EVENT = "RDS DB Cluster Event",
 }
 
 function handle_instance_state_change(event: any, context: any): RDSChange {
@@ -36,7 +37,10 @@ function sendToSlack(rdsChangeEvent: RDSChange): RDSChange {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "*RDS Instance*: `" + rdsChangeEvent.dbInstanceIdentifier + "`",
+          text:
+            "*RDS Instance/Cluster*: `" +
+            rdsChangeEvent.dbInstanceIdentifier +
+            "`",
         },
       },
       {
@@ -84,7 +88,10 @@ function sendToSlack(rdsChangeEvent: RDSChange): RDSChange {
 export function handler(event: any, context: any): RDSChange {
   let change: RDSChange;
 
-  if (event["detail-type"] == HandledDetailTypes.INSTANCE_EVENT) {
+  if (
+    event["detail-type"] == HandledDetailTypes.INSTANCE_EVENT ||
+    event["detail-type"] == HandledDetailTypes.CLUSTER_EVENT
+  ) {
     change = handle_instance_state_change(event, context);
   } else {
     throw "unhandled RDS detail type or uninteresting event";
