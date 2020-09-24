@@ -17,7 +17,7 @@ release:
   dependencies:
     - test_infra
   script:
-    - echo "@greximus-beige:registry=https://gitlab.com/api/v4/packages/npm/"  >> .npmrc
+    - echo "@beige:registry=https://gitlab.com/api/v4/packages/npm/"  >> .npmrc
     - echo "//gitlab.com/api/v4/packages/npm/:_authToken=${CI_JOB_TOKEN}" >> .npmrc
     - echo "//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}" >> .npmrc  
     - npm install

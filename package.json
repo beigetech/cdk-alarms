@@ -1,9 +1,9 @@
 {
-  "name": "@greximus-beige/alarms",
-  "version": "0.1.2",
+  "name": "@beige/cdk-alarms",
+  "version": "0.1.0",
   "bin": {},
   "publishConfig": {
-    "@greximus-beige:registry": "https://gitlab.com/api/v4/projects/21251762/packages/npm/"
+    "@beige:registry": "https://gitlab.com/api/v4/projects/21251762/packages/npm/"
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

@@ -1,6 +1,6 @@
-[![coverage report](https://gitlab.com/greximus-beige/cdk-alarms/badges/master/coverage.svg)](https://gitlab.com/greximus-beige/cdk-alarms/-/commits/master)
+[![coverage report](https://gitlab.com/beige/ops/cdk-alarms/badges/master/coverage.svg)](https://gitlab.com/beige/ops/cdk-alarms/-/commits/master)
 
-## @beige/meerkat: Alarms for AWS Resources
+## @beige/cdk-alarms: Alarms for AWS Resources
 
 Create CloudWatch alarms and event notifications for AWS resources, supported constructs:
 
@@ -10,7 +10,7 @@ Create CloudWatch alarms and event notifications for AWS resources, supported co
 Example:
 
 ```
-Import {DatabaseAlarms} from '@greximus-beige/cdk-alarms';
+Import {DatabaseAlarms} from '@beige/cdk-alarms';
 
 let stack = new Stack();
 
