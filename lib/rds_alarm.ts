@@ -259,6 +259,7 @@ export class DatabaseAlarm {
       snsTopicArn: topic.topicArn,
       sourceIds: [inst.instanceIdentifier],
       eventCategories: subscribeEventCategories,
+      sourceType: "db-instance",
     });
   }
 }
