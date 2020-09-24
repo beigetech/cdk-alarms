@@ -302,6 +302,7 @@ export class DatabaseClusterAlarm {
       snsTopicArn: topic.topicArn,
       sourceIds: [cluster.clusterIdentifier],
       eventCategories: subscribeEventCategories,
+      sourceType: "db-cluster",
     });
   }
 }
