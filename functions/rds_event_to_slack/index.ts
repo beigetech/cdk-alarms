@@ -29,7 +29,7 @@ function sendToSlack(rdsChangeEvent: RDSChange): RDSChange {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "ORCA: ECS " + rdsChangeEvent.eventType + " event",
+          text: "RDS " + rdsChangeEvent.eventType + " event",
         },
       },
       {

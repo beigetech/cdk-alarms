@@ -147,18 +147,7 @@ test("Should generate event subscription for RDS Cluster", () => {
   );
 
   expect(stack).toHaveResourceLike("AWS::RDS::EventSubscription", {
-    EventCategories: [
-      "availability",
-      "backup",
-      "configuration change",
-      "creation",
-      "deletion",
-      "failover",
-      "failure",
-      "low storage",
-      "read replica",
-      "recovery",
-    ],
+    EventCategories: ["failover", "failure", "maintenance", "notification"],
     SourceIds: [
       {
         Ref: stack.getLogicalId(cluster.node.defaultChild as CfnElement),
