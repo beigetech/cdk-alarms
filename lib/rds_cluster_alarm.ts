@@ -285,18 +285,7 @@ export class DatabaseClusterAlarm {
   ): void {
     const subscribeEventCategories = eventCategories
       ? eventCategories
-      : [
-          "availability",
-          "backup",
-          "configuration change",
-          "creation",
-          "deletion",
-          "failover",
-          "failure",
-          "low storage",
-          "read replica",
-          "recovery",
-        ];
+      : ["failover", "failure", "maintenance", "notification"];
 
     new CfnEventSubscription(scope, id + "EventSubscription", {
       snsTopicArn: topic.topicArn,
