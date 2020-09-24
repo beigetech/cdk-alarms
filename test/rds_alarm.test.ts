@@ -98,15 +98,11 @@ test("Should generate custom event subscription for RDS Instance", () => {
     instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
   });
 
-  DatabaseAlarm.subcribeEventsToSlack(
+  DatabaseAlarm.createEventSubscription(
     stack,
     "rds-events",
     inst,
-    {
-      username: "Alarm Bot",
-      url: "/slack/webhook",
-      channel: "#alerts",
-    },
+    new Topic(stack, "EventTopic"),
     ["availability"]
   );
 
@@ -129,11 +125,12 @@ test("Should generate default event subscription for RDS Instance", () => {
     instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
   });
 
-  DatabaseAlarm.subcribeEventsToSlack(stack, "rds-events", inst, {
-    username: "Alarm Bot",
-    url: "/slack/webhook",
-    channel: "#alerts",
-  });
+  DatabaseAlarm.createEventSubscription(
+    stack,
+    "rds-events",
+    inst,
+    new Topic(stack, "EventTopic")
+  );
 
   expect(stack).toHaveResourceLike("AWS::RDS::EventSubscription", {
     EventCategories: [

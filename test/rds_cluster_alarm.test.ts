@@ -139,11 +139,12 @@ test("Should generate event subscription for RDS Cluster", () => {
     },
   });
 
-  DatabaseClusterAlarm.subcribeEventsToSlack(stack, "rds-events", cluster, {
-    username: "Alarm Bot",
-    url: "/slack/webhook",
-    channel: "#alerts",
-  });
+  DatabaseClusterAlarm.createEventSubscription(
+    stack,
+    "rds-events",
+    cluster,
+    new Topic(stack, "Topic")
+  );
 
   expect(stack).toHaveResourceLike("AWS::RDS::EventSubscription", {
     EventCategories: [
