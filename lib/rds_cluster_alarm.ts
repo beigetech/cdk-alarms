@@ -276,40 +276,6 @@ export class DatabaseClusterAlarm {
    * @param {SlackWebhookProps} slackWebHookProps - a Slack WebHook to write events to
    * @param {string[]} eventCategories - An array of RDS event categories of interest, these are detailed in the RDS documentation (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html#USER_Events.Messages)
    **/
-  static subcribeEventsToSlack(
-    scope: Construct,
-    id: string,
-    cluster: DatabaseCluster,
-    slackWebHookProps: SlackWebhookProps,
-    eventCategories?: string[]
-  ): void {
-    const topic = new Topic(scope, id + "EventSubscriptionSns");
-
-    const fn = new lambda.Function(scope, id + "EventProcessor", {
-      code: lambda.Code.fromAsset("functions/rds_event_to_slack"),
-      handler: "index.handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
-      timeout: Duration.seconds(15),
-      memorySize: 128,
-      description: "Process RDS events for",
-      environment: {
-        SLACK_WEBHOOKURL: slackWebHookProps.url,
-        SLACK_CHANNELNAME: slackWebHookProps.channel,
-        SLACK_USERNAME: slackWebHookProps.username,
-      },
-    });
-
-    fn.addEventSource(new SnsEventSource(topic));
-
-    DatabaseClusterAlarm.createEventSubscription(
-      scope,
-      id,
-      cluster,
-      topic,
-      eventCategories
-    );
-  }
-
   static createEventSubscription(
     scope: Construct,
     id: string,
