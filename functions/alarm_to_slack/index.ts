@@ -12,6 +12,7 @@ interface SnsMessage {
   AlarmName: string;
   StateChangeTime: string;
   NewStateReason: string;
+  AlarmDescription: string;
 }
 
 function sendToSlack(snsRecord: SnsRecord) {
@@ -27,7 +28,7 @@ function sendToSlack(snsRecord: SnsRecord) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: ":alarm_clock: *Alarm Triggered*: " + message.AlarmName,
+          text: ":alarm_clock: *Alarm Triggered*: " + message.AlarmDescription,
         },
       },
       {
@@ -42,7 +43,7 @@ function sendToSlack(snsRecord: SnsRecord) {
               "*State Change*: " +
               moment
                 .tz(message.StateChangeTime, "Australia/Sydney")
-                .format("Do MMM yyyy HH:mm:ss A"),
+                .format("Do MMM HH:mm:ss A"),
           },
           {
             type: "mrkdwn",
