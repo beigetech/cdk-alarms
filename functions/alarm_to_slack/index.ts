@@ -1,4 +1,5 @@
 import * as https from "https";
+import * as moment from 'moment-timezone';
 
 interface SnsRecord {
   Subject: string;
@@ -37,7 +38,9 @@ function sendToSlack(snsRecord: SnsRecord) {
         fields: [
           {
             type: "mrkdwn",
-            text: "*State Change: *" + message.StateChangeTime,
+            text:
+              "*State Change*: " +
+              moment.tz(message.StateChangeTime,'Australia/Sydney').format("Do MMM yyyy HH:mm:ss A"),
           },
           {
             type: "mrkdwn",
