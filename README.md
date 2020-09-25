@@ -1,4 +1,4 @@
-## @beige/cdk-alarms: Alarms for AWS Resources
+## @beigetech/cdk-alarms: Alarms for AWS Resources
 
 Create CloudWatch alarms and event notifications for AWS resources, supported constructs:
 
