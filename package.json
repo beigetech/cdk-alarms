@@ -1,9 +1,10 @@
 {
-  "name": "@beige/cdk-alarms",
-  "version": "0.1.0",
+  "name": "@beigetech/cdk-alarms",
+  "version": "0.1.2",
   "bin": {},
-  "publishConfig": {
-    "@beige:registry": "https://gitlab.com/api/v4/projects/21251762/packages/npm/"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beigetech/cdk-alarms.git"
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

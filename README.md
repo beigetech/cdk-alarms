@@ -1,5 +1,3 @@
-[![coverage report](https://gitlab.com/beige/ops/cdk-alarms/badges/master/coverage.svg)](https://gitlab.com/beige/ops/cdk-alarms/-/commits/master)
-
 ## @beige/cdk-alarms: Alarms for AWS Resources
 
 Create CloudWatch alarms and event notifications for AWS resources, supported constructs:
@@ -10,7 +8,7 @@ Create CloudWatch alarms and event notifications for AWS resources, supported co
 Example:
 
 ```
-Import {DatabaseAlarms} from '@beige/cdk-alarms';
+Import {DatabaseAlarms} from '@beigetech/cdk-alarms';
 
 let stack = new Stack();
 

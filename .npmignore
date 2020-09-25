@@ -11,3 +11,6 @@ test_resources
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+Makefile
+.eslintrc.yml
+.github

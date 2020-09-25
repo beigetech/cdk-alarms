@@ -1,0 +1,22 @@
+name: test
+
+on: push
+
+strategy:
+  matrix:
+    node-version: [12.x]  
+
+
+jobs:
+  test:   
+    name: Install and test 
+    runs-on: node:12
+    steps:
+      - name: install using Node.js 
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}  
+      - run: make install
+      - run: make test  
+
+            
