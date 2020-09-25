@@ -2,24 +2,20 @@ name: test
 
 on: push
 
-
 jobs:
-
-  test:   
-    runs-on: ubuntu-latest 
+  test:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]  
-    name: Install and test 
+        node-version: [12.x]
+    name: Install and test
     steps:
       - uses: actions/checkout@v2
-      - name: install using Node.js 
+      - name: install using Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}  
+          node-version: ${{ matrix.node-version }}
       - run: make install
       - run: make test
         env:
-          CI: true  
-
-            
+          CI: true
