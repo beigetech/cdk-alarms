@@ -1,5 +1,4 @@
 import * as https from "https";
-import * as moment from "moment-timezone";
 
 interface SnsRecord {
   Subject: string;
@@ -17,6 +16,8 @@ interface SnsMessage {
 
 function sendToSlack(snsRecord: SnsRecord) {
   let message: SnsMessage = JSON.parse(snsRecord.Message);
+  let tz = process.env.TIMEZONE || "Australia/Sydney";
+  let changeTime = new Date(message.StateChangeTime);
 
   let data = JSON.stringify({
     channel: process.env.SLACK_CHANNELNAME,
@@ -41,9 +42,7 @@ function sendToSlack(snsRecord: SnsRecord) {
             type: "mrkdwn",
             text:
               "*State Change*: " +
-              moment
-                .tz(message.StateChangeTime, "Australia/Sydney")
-                .format("Do MMM HH:mm:ss A"),
+              changeTime.toLocaleString("en-AU", { timeZone: tz }),
           },
           {
             type: "mrkdwn",
