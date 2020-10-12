@@ -1,12 +1,40 @@
 import { Construct, Duration } from "@aws-cdk/core";
 import { DatabaseInstance, CfnEventSubscription } from "@aws-cdk/aws-rds";
 import { Topic } from "@aws-cdk/aws-sns";
-import * as lambda from "@aws-cdk/aws-lambda";
-import { SnsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { SlackWebhookProps } from "./slack_webhook";
 import { SnsAction } from "@aws-cdk/aws-cloudwatch-actions";
 
 import { Alarm, Metric, ComparisonOperator } from "@aws-cdk/aws-cloudwatch";
+import { BaseAlarmBuilder } from "./base_alarm";
+
+const NAMESPACE = "AWS/RDS";
+
+export enum RDS_METRIC {
+  BINLOG_USAGE = "BinLogDiskUsage",
+  BURST_BALANCE = "BurstBalance",
+  CPU_UTILIZATION = "CPUUtilization",
+  CPU_CREDIT_USAGE = "CPUCreditUsage",
+  CPU_CREDIT_BALANCE = "CPUCreditBalance",
+  DATABASE_CONNECTIONS = "DatabaseConnections",
+  DISK_QUEUE_DEPTH = "DiskQueueDepth",
+  FAILED_SQLSERVER_AGENT_JOBS_COUNT = "FailedSQLServerAgentJobsCount",
+  FREEABLE_MEMORY = "FreeableMemory",
+  FREE_STORAGE_SPACE = "FreeStorageSpace",
+  MAXIMUM_USED_TRANSACTIONIDS = "MaximumUsedTransactionIDs",
+  NETWORK_RECEIVE_THROUGHPUT = "NetworkReceiveThroughput",
+  NETWORK_TRANSMIT_THROUGHPUT = "NetworkTransmitThroughput",
+  OLDEST_REPLICATION_SLOTLAG = "OldestReplicationSlotLag",
+  READ_IOPS = "ReadIOPS",
+  READ_LATENCY = "ReadLatency",
+  READ_THROUGHPUT = "ReadThroughput",
+  REPLICA_LAG = "ReplicaLag",
+  REPLICATION_SLOT_DISKUSAGE = "ReplicationSlotDiskUsage",
+  SWAP_USAGE = "SwapUsage",
+  TRANSACTION_LOGS_DISKUSAGE = "TransactionLogsDiskUsage",
+  TRANSACTION_LOGS_GENERATION = "TransactionLogsGeneration",
+  WRITE_IOPS = "WriteIOPS",
+  WRITE_LATENCY = "WriteLatency",
+  WRITE_THROUGHPUT = "WriteThroughput",
+}
 
 interface DatabaseAlarmOptions {
   highCpuEnabled?: boolean;
@@ -65,24 +93,18 @@ export class DatabaseAlarm {
     const alarms: Alarm[] = [];
 
     if (alarmOptions.highCpuEnabled) {
-      alarms.push(
-        DatabaseAlarm.createCpuAlarm(scope, inst, alarmOptions.highCpuPct)
-      );
+      alarms.push(this.createCpuAlarm(scope, inst, alarmOptions.highCpuPct));
     }
 
     if (alarmOptions.lowMemoryEnabled && alarmOptions.lowMemoryBytes) {
       alarms.push(
-        DatabaseAlarm.createFreeableMemoryAlarm(
-          scope,
-          inst,
-          alarmOptions.lowMemoryBytes
-        )
+        this.createFreeableMemoryAlarm(scope, inst, alarmOptions.lowMemoryBytes)
       );
     }
 
     if (alarmOptions.writeLatencyEnabled) {
       alarms.push(
-        DatabaseAlarm.createWriteLatencyAlarm(
+        this.createWriteLatencyAlarm(
           scope,
           inst,
           alarmOptions.writeLatencySeconds
@@ -92,7 +114,7 @@ export class DatabaseAlarm {
 
     if (alarmOptions.readLatencyEnabled) {
       alarms.push(
-        DatabaseAlarm.createReadLatencyAlarm(
+        this.createReadLatencyAlarm(
           scope,
           inst,
           alarmOptions.readLatencySeconds
@@ -109,6 +131,20 @@ export class DatabaseAlarm {
   }
 
   /**
+   * Create an AlarmBuilder, uses the DatabaseInstance as a dimension
+   * @param {Construct} scope - as CDK Construct
+   * @param {DatabaseInstance} inst - a DatabaseInstance
+   * @returns {AlarmBuilder}
+   **/
+  static createAlarm(
+    scope: Construct,
+    inst: DatabaseInstance,
+    metric: RDS_METRIC
+  ): AlarmBuilder {
+    return new AlarmBuilder(scope, inst, metric);
+  }
+
+  /**
    * Create a CPU Alarm, by default uses a 90% average threshold over a 60 second duration
    * @param {Construct} scope - as CDK Construct
    * @param {DatabaseInstance} inst - a DatabaseInstance
@@ -119,20 +155,11 @@ export class DatabaseAlarm {
     inst: DatabaseInstance,
     threshold?: number
   ): Alarm {
-    return new Alarm(scope, inst.node.id + "HighCpuAlarm", {
-      metric: new Metric({
-        namespace: "AWS/RDS",
-        metricName: "CPUUtilization",
-        dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
-        },
-      }),
-      threshold: threshold ? threshold : DEFAULT_ALARM_OPTIONS.highCpuPct,
-      period: Duration.seconds(60),
-      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-      alarmDescription: "High CPU Utilization: " + inst.instanceIdentifier,
-      evaluationPeriods: 1,
-    });
+    return new AlarmBuilder(scope, inst, RDS_METRIC.CPU_UTILIZATION)
+      .setDescription("High CPU Utilization: " + inst.instanceIdentifier)
+      .setThreshold(threshold ? threshold : DEFAULT_ALARM_OPTIONS.highCpuPct)
+      .setOp(ComparisonOperator.GREATER_THAN_THRESHOLD)
+      .build();
   }
 
   /**
@@ -140,30 +167,20 @@ export class DatabaseAlarm {
    * @param {Construct} scope - as CDK Construct
    * @param {DatabaseInstance} inst - a DatabaseInstance or DatabaseCluster
    * @param {number} threshold - (second) write latency
+   * @returns {Alarm}
    **/
   static createWriteLatencyAlarm(
     scope: Construct,
     inst: DatabaseInstance,
     threshold?: number
   ): Alarm {
-    return new Alarm(scope, inst.node.id + "WriteLatencyAlarm", {
-      metric: new Metric({
-        namespace: "AWS/RDS",
-        metricName: "WriteLatency",
-        dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
-        },
-      }),
-      threshold: threshold
-        ? threshold
-        : DEFAULT_ALARM_OPTIONS.writeLatencySeconds,
-      period: Duration.seconds(60),
-      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-      alarmDescription:
-        "Write Latency excceded threshold for Resource:" +
-        inst.instanceIdentifier,
-      evaluationPeriods: 1,
-    });
+    return new AlarmBuilder(scope, inst, RDS_METRIC.WRITE_LATENCY)
+      .setDescription("Write Latency exceeded: " + inst.instanceIdentifier)
+      .setThreshold(
+        threshold ? threshold : DEFAULT_ALARM_OPTIONS.writeLatencySeconds
+      )
+      .setOp(ComparisonOperator.GREATER_THAN_THRESHOLD)
+      .build();
   }
 
   /**
@@ -171,30 +188,23 @@ export class DatabaseAlarm {
    * @param {Construct} scope - as CDK Construct
    * @param {DatabaseInstance} inst - a DatabaseInstance
    * @param {number} threshold - (second) write latency
+   * @returns {Alarm}
    **/
   static createReadLatencyAlarm(
     scope: Construct,
     inst: DatabaseInstance,
     threshold?: number
   ): Alarm {
-    return new Alarm(scope, inst.node.id + "ReadLatencyAlarm", {
-      metric: new Metric({
-        namespace: "AWS/RDS",
-        metricName: "ReadLatency",
-        dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
-        },
-      }),
-      threshold: threshold
-        ? threshold
-        : DEFAULT_ALARM_OPTIONS.readLatencySeconds,
-      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-      period: Duration.seconds(60),
-      alarmDescription:
+    return new AlarmBuilder(scope, inst, RDS_METRIC.READ_LATENCY)
+      .setDescription(
         "Read Latency excceded threshold for Resource: " +
-        inst.instanceIdentifier,
-      evaluationPeriods: 1,
-    });
+          inst.instanceIdentifier
+      )
+      .setThreshold(
+        threshold ? threshold : DEFAULT_ALARM_OPTIONS.readLatencySeconds
+      )
+      .setOp(ComparisonOperator.GREATER_THAN_THRESHOLD)
+      .build();
   }
 
   /**
@@ -202,35 +212,29 @@ export class DatabaseAlarm {
    * @param {Construct} scope - a CDK Construct
    * @param {DatabaseInstance} inst - a DatabaseInstance
    * @param {number} threshold - memory in bytes that are freeable
+   * @returns {Alarm}
    **/
   static createFreeableMemoryAlarm(
     scope: Construct,
     inst: DatabaseInstance,
     threshold?: number
   ): Alarm {
-    return new Alarm(scope, inst.node.id + "LowFreeableMemory", {
-      metric: new Metric({
-        namespace: "AWS/RDS",
-        metricName: "FreeableMemory",
-        dimensions: {
-          DBInstanceIdentifier: inst.instanceIdentifier,
-        },
-      }),
-      threshold: threshold ? threshold : DEFAULT_ALARM_OPTIONS.lowMemoryBytes,
-      period: Duration.seconds(60),
-      comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
-      alarmDescription:
-        "Read Latency excceded threshold for Resource: " +
-        inst.instanceIdentifier,
-      evaluationPeriods: 1,
-    });
+    return new AlarmBuilder(scope, inst, RDS_METRIC.FREEABLE_MEMORY)
+      .setDescription(
+        "Low Freeable memory for Resource:" + inst.instanceIdentifier
+      )
+      .setThreshold(
+        threshold ? threshold : DEFAULT_ALARM_OPTIONS.readLatencySeconds
+      )
+      .setOp(ComparisonOperator.LESS_THAN_THRESHOLD)
+      .build();
   }
 
   /**
    * @param {Construct} scope - stack to create the resources in
    * @param {string} id - CDK identifier to form prefix
    * @param {DatabaseInstance} inst - a Database Instance
-   * @param {SlackWebhookProps} slackWebHookProps - a Slack WebHook to write events to
+   * @param {Topic} topic - an SNS topic to write events to
    * @param {string[]} eventCategories - An array of RDS event categories of interest, these are detailed in the RDS documentation (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html#USER_Events.Messages)
    **/
   static createEventSubscription(
@@ -260,6 +264,35 @@ export class DatabaseAlarm {
       sourceIds: [inst.instanceIdentifier],
       eventCategories: subscribeEventCategories,
       sourceType: "db-instance",
+    });
+  }
+}
+
+class AlarmBuilder extends BaseAlarmBuilder {
+  readonly inst: DatabaseInstance;
+  private metric: RDS_METRIC;
+
+  constructor(scope: Construct, inst: DatabaseInstance, metric: RDS_METRIC) {
+    super(scope);
+    this.metric = metric;
+    this.inst = inst;
+  }
+
+  build(): Alarm {
+    return new Alarm(this.scope, this.inst.node.id + this.metric, {
+      metric: new Metric({
+        namespace: NAMESPACE,
+        metricName: this.metric,
+        dimensions: {
+          DBInstanceIdentifier: this.inst.instanceIdentifier,
+        },
+        statistic: this.getStatistic(),
+      }),
+      threshold: this.getThreshold(),
+      period: this.getPeriod(),
+      comparisonOperator: this.getOp(),
+      alarmDescription: this.getAlarmDescription(),
+      evaluationPeriods: this.getEvaluationPeriods(),
     });
   }
 }
