@@ -1,8 +1,8 @@
-name: coverage 
+name: coverage
 
-on: 
+on:
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   test:
