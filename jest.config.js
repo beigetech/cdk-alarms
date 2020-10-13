@@ -5,7 +5,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   },
-  coverageReporters: ['text-summary'],	
+  coverageReporters: ['text-summary', 'lcov'],	
   coverageThreshold: {
     global: {
 	    lines: 80
