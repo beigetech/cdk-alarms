@@ -14,3 +14,5 @@ cdk.out
 Makefile
 .eslintrc.yml
 .github
+coverage
+docs

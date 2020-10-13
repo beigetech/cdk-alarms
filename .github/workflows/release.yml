@@ -1,23 +1,20 @@
 name: release
 
-on: 
+on:
   release:
     types: [created]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [12.x]
-    name: Deploy coverage
+    name: Deploy to npmjs
     steps:
       - uses: actions/checkout@v2
-      - name: install using Node.js
-        uses: actions/setup-node@v1
+      - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: make install
-      - run: npm publish
+          node-version: "12.x"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm install
+      - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
