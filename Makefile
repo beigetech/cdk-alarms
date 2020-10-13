@@ -7,7 +7,7 @@ test:
 	npm run build
 	npx prettier --check .
 	npx eslint **/*.ts --quiet
-	npx jest --coverage
+	npx jest --coverage 
 
 watch:
 	npm run watch
