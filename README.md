@@ -1,6 +1,7 @@
 ## @beigetech/cdk-alarms: Alarms for AWS Resources
 
 [![npm version](https://badge.fury.io/js/%40beigetech%2Fcdk-alarms.svg)](https://badge.fury.io/js/%40beigetech%2Fcdk-alarms)
+[![Coverage Status](https://coveralls.io/repos/github/beigetech/cdk-alarms/badge.svg?branch=guy/deploy)](https://coveralls.io/github/beigetech/cdk-alarms?branch=guy/deploy)
 
 Create CloudWatch alarms and event notifications for AWS resources, supported constructs:
 
